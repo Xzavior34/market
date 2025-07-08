@@ -1,58 +1,36 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Order History - Mini Jumia</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
+
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
     </div>
-  </nav>  <div class="container mt-4">
+  </nav>
+
+  <div class="container mt-4">
     <h2>📜 Order History</h2>
     <div id="orderHistory"></div>
-  </div>  <script>
-    const orders = JSON.parse(localStorage.getItem("orderHistory")) || [];
-    const currentUser = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+  </div>
 
-    const orderHistory = document.getElementById("orderHistory");
-
-    if (orders.length === 0) {
-      orderHistory.innerHTML = "<p>You have no past orders.</p>";
-    } else {
-      orders.forEach((order, i) => {
-        if (order.username !== currentUser.username) return;
-
-        let total = order.items.reduce((sum, item) => sum + item.price, 0);
-        let list = order.items.map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("");
-
-        const card = document.createElement("div");
-        card.className = "card mb-3";
-        card.innerHTML = `
-          <div class="card-body">
-            <h5>Order #${i + 1}</h5>
-            <p><strong>Name:</strong> ${order.name}</p>
-            <p><strong>Phone:</strong> ${order.phone}</p>
-            <p><strong>Address:</strong> ${order.address}</p>
-            <p><strong>Status:</strong> <span class="badge bg-info">${order.status || 'Pending'}</span></p>
-            <ul>${list}</ul>
-            <p><strong>Total:</strong> ₦${total.toLocaleString()}</p>
-          </div>
-        `;
-        orderHistory.appendChild(card);
-      });
-    }
-  </script>  <script>
-    const userArea = document.getElementById("userArea");
+  <script>
+    // Check if user is logged in
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-
     if (!user) {
       alert("Please log in to access this page.");
       window.location.href = "login.html";
-    } else {
+    }
+
+    // Render user greeting
+    const userArea = document.getElementById("userArea");
+    if (user) {
       userArea.innerHTML = `
         👋 Welcome, <strong>${user.username}</strong>
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
@@ -64,5 +42,40 @@
       alert("You have been logged out.");
       window.location.href = "login.html";
     }
-  </script></body>
+
+    // Load order history
+    const orders = JSON.parse(localStorage.getItem("orderHistory")) || [];
+    const orderHistory = document.getElementById("orderHistory");
+
+    if (orders.length === 0) {
+      orderHistory.innerHTML = "<p>You have no past orders.</p>";
+    } else {
+      orders.forEach((order, index) => {
+        const total = order.items.reduce((sum, item) => sum + item.price, 0);
+        const listItems = order.items.map(item => `<li>${item.name} - ₦${item.price.toLocaleString()}</li>`).join("");
+        const status = order.status || "Pending";
+        let badgeClass = "bg-secondary";
+
+        if (status === "Pending") badgeClass = "bg-warning text-dark";
+        else if (status === "Shipped") badgeClass = "bg-success";
+        else if (status === "Cancelled") badgeClass = "bg-danger";
+
+        const card = document.createElement("div");
+        card.className = "card mb-3";
+        card.innerHTML = `
+          <div class="card-body">
+            <h5>Order #${index + 1}</h5>
+            <p><strong>Name:</strong> ${order.name}</p>
+            <p><strong>Phone:</strong> ${order.phone}</p>
+            <p><strong>Address:</strong> ${order.address}</p>
+            <ul>${listItems}</ul>
+            <p><strong>Total:</strong> ₦${total.toLocaleString()}</p>
+            <p>Status: <span class="badge ${badgeClass}">${status}</span></p>
+          </div>
+        `;
+        orderHistory.appendChild(card);
+      });
+    }
+  </script>
+</body>
 </html>
