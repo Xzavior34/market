@@ -23,51 +23,27 @@
         <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
       </form>
 
-      <select id="categoryFilter" class="form-select w-auto me-2" onchange="filterProducts()">
+      <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
         <option value="">All Categories</option>
       </select>
 
-      <a class="btn btn-light me-2" href="history.html">📜 Orders</a>
-      <a class="btn btn-light" href="cart.html">🛒 Cart</a>
+      <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
+      <a class="btn btn-warning" href="history.html" id="viewOrders" style="display: none;">📜 View Orders</a>
     </div>
   </nav>
 
   <div class="container mt-4">
     <div class="row" id="productList">
-      <!-- Products will appear here -->
+      <!-- Products will be shown here -->
     </div>
   </div>
 
   <script>
     const defaultProducts = [
-      {
-        id: 1,
-        name: "Wireless Earbuds",
-        price: 7500,
-        image: "https://i.imgur.com/C8hQ58D.jpg",
-        category: "Electronics"
-      },
-      {
-        id: 2,
-        name: "Smartphone",
-        price: 45000,
-        image: "https://i.imgur.com/xW0Xr1o.jpg",
-        category: "Electronics"
-      },
-      {
-        id: 3,
-        name: "Sneakers",
-        price: 12000,
-        image: "https://i.imgur.com/D2eOMlf.jpg",
-        category: "Fashion"
-      },
-      {
-        id: 4,
-        name: "Bluetooth Speaker",
-        price: 9500,
-        image: "https://i.imgur.com/8JmGBUR.jpg",
-        category: "Electronics"
-      }
+      { id: 1, name: "Wireless Earbuds", price: 7500, category: "Electronics" },
+      { id: 2, name: "Smartphone", price: 45000, category: "Electronics" },
+      { id: 3, name: "Sneakers", price: 12000, category: "Fashion" },
+      { id: 4, name: "Bluetooth Speaker", price: 9500, category: "Electronics" }
     ];
 
     const uploadedProducts = JSON.parse(localStorage.getItem("products")) || [];
@@ -79,11 +55,12 @@
     function renderProducts(productsToShow) {
       productList.innerHTML = "";
       productsToShow.forEach(product => {
+        const imageUrl = `https://source.unsplash.com/600x400/?${encodeURIComponent(product.name)}`;
         const col = document.createElement("div");
         col.className = "col-md-3 mb-4";
         col.innerHTML = `
           <div class="card product-card">
-            <img src="${product.image || 'https://via.placeholder.com/300x200?text=No+Image'}" class="card-img-top" alt="${product.name}">
+            <img src="${imageUrl}" class="card-img-top" alt="${product.name}">
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
@@ -116,11 +93,13 @@
     function filterProducts() {
       const search = document.getElementById("searchInput").value.toLowerCase();
       const category = categoryFilter.value;
+
       const filtered = allProducts.filter(p => {
         const matchName = p.name.toLowerCase().includes(search);
         const matchCategory = category ? p.category === category : true;
         return matchName && matchCategory;
       });
+
       renderProducts(filtered);
     }
 
@@ -131,9 +110,11 @@
 
   <script>
     const userArea = document.getElementById("userArea");
+    const viewOrders = document.getElementById("viewOrders");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
     if (user) {
+      viewOrders.style.display = "inline-block";
       userArea.innerHTML = `
         👋 Welcome, <strong>${user.username}</strong>
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
@@ -147,4 +128,4 @@
     }
   </script>
 </body>
-</html>
+</html> 
