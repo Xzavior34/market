@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -27,7 +27,7 @@ l<!DOCTYPE html>
         <option value="">All Categories</option>
       </select>
 
-      <a class="btn btn-light me-2" href="orders.html">📜 Orders</a>
+      <a class="btn btn-light me-2" href="history.html">📜 Orders</a>
       <a class="btn btn-light" href="cart.html">🛒 Cart</a>
     </div>
   </nav>
@@ -35,11 +35,6 @@ l<!DOCTYPE html>
   <div class="container mt-4">
     <div class="row" id="productList">
       <!-- Products will be shown here -->
-    </div>
-
-    <!-- Optional: Extra orders button below products -->
-    <div class="text-center my-4">
-      <a href="orders.html" class="btn btn-outline-secondary">📜 View My Order History</a>
     </div>
   </div>
 
@@ -60,15 +55,22 @@ l<!DOCTYPE html>
     function renderProducts(productsToShow) {
       productList.innerHTML = "";
       productsToShow.forEach(product => {
+        const imageSrc = product.image?.startsWith("http")
+          ? product.image
+          : `${product.image}`;
+
         const col = document.createElement("div");
         col.className = "col-md-3 mb-4";
         col.innerHTML = `
           <div class="card product-card">
-            <img src="${product.image || 'https://via.placeholder.com/300x200?text=No+Image'}" class="card-img-top" alt="${product.name}">
+            <img src="${imageSrc}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary w-100" onclick="addToCart(${product.id})">Add to Cart</button>
+              <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="addToCart(${product.id})">Add to Cart</button>
+                <a href="details.html?id=${product.id}" class="btn btn-outline-secondary">View Details</a>
+              </div>
             </div>
           </div>
         `;
@@ -130,4 +132,4 @@ l<!DOCTYPE html>
     }
   </script>
 </body>
-        </html>
+</html>
