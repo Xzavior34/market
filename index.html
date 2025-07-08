@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,54 +12,60 @@
   </style>
 </head>
 <body>
-  <div id="userArea" class="text-end p-2"></div>
-
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div id="userArea" class="text-end p-2"></div>  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🛍 Mini Jumia</a>
+      <a class="navbar-brand" href="#">🛍 Mini Jumia</a><form class="d-flex ms-auto me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
+    <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
+  </form>
 
-      <form class="d-flex ms-auto me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
-        <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
-      </form>
+  <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
+    <option value="">All Categories</option>
+  </select>
 
-      <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
-        <option value="">All Categories</option>
-      </select>
+  <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
+  <a id="viewOrderBtn" class="btn btn-warning me-2 d-none" href="history.html">📜 View Orders</a>
+</div>
 
-      <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
-      <a class="btn btn-warning" href="history.html" id="viewOrders" style="display: none;">📜 View Orders</a>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
+  </nav>  <div class="container mt-4">
     <div class="row" id="productList">
-      <!-- Products will be shown here -->
+      <!-- Products will be inserted here -->
     </div>
-  </div>
+  </div>  <script>
+    const UNSPLASH_ACCESS_KEY = "iL4uuFm_rqPR1vAgNr8okeBsoxQ0lX2DhSxeNkOV9sY";
 
-  <script>
     const defaultProducts = [
-      { id: 1, name: "Wireless Earbuds", price: 7500, category: "Electronics" },
-      { id: 2, name: "Smartphone", price: 45000, category: "Electronics" },
-      { id: 3, name: "Sneakers", price: 12000, category: "Fashion" },
-      { id: 4, name: "Bluetooth Speaker", price: 9500, category: "Electronics" }
+      { id: 1, name: "Wireless Earbuds", price: 7500, image: "", category: "Electronics" },
+      { id: 2, name: "Smartphone", price: 45000, image: "", category: "Electronics" },
+      { id: 3, name: "Sneakers", price: 12000, image: "", category: "Fashion" },
+      { id: 4, name: "Bluetooth Speaker", price: 9500, image: "", category: "Electronics" }
     ];
 
     const uploadedProducts = JSON.parse(localStorage.getItem("products")) || [];
     const allProducts = [...defaultProducts, ...uploadedProducts];
-
     const productList = document.getElementById("productList");
     const categoryFilter = document.getElementById("categoryFilter");
 
-    function renderProducts(productsToShow) {
+    async function fetchImageURL(query) {
+      try {
+        const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${UNSPLASH_ACCESS_KEY}`);
+        const data = await res.json();
+        return data.results[0]?.urls?.small || "https://via.placeholder.com/300x200?text=No+Image";
+      } catch (e) {
+        return "https://via.placeholder.com/300x200?text=No+Image";
+      }
+    }
+
+    async function renderProducts(productsToShow) {
       productList.innerHTML = "";
-      productsToShow.forEach(product => {
-        const imageUrl = `https://source.unsplash.com/600x400/?${encodeURIComponent(product.name)}`;
+      for (const product of productsToShow) {
+        if (!product.image && product.name) {
+          product.image = await fetchImageURL(product.name);
+        }
         const col = document.createElement("div");
         col.className = "col-md-3 mb-4";
         col.innerHTML = `
           <div class="card product-card">
-            <img src="${imageUrl}" class="card-img-top" alt="${product.name}">
+            <img src="${product.image}" class="card-img-top" alt="${product.name}">
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
@@ -69,7 +74,7 @@
           </div>
         `;
         productList.appendChild(col);
-      });
+      }
     }
 
     function addToCart(productId) {
@@ -93,32 +98,27 @@
     function filterProducts() {
       const search = document.getElementById("searchInput").value.toLowerCase();
       const category = categoryFilter.value;
-
       const filtered = allProducts.filter(p => {
         const matchName = p.name.toLowerCase().includes(search);
         const matchCategory = category ? p.category === category : true;
         return matchName && matchCategory;
       });
-
       renderProducts(filtered);
     }
 
-    // Initialize
     populateCategories();
     renderProducts(allProducts);
-  </script>
-
-  <script>
+  </script>  <script>
     const userArea = document.getElementById("userArea");
-    const viewOrders = document.getElementById("viewOrders");
+    const viewOrderBtn = document.getElementById("viewOrderBtn");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
     if (user) {
-      viewOrders.style.display = "inline-block";
       userArea.innerHTML = `
         👋 Welcome, <strong>${user.username}</strong>
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
       `;
+      viewOrderBtn.classList.remove("d-none");
     }
 
     function logout() {
@@ -128,4 +128,4 @@
     }
   </script>
 </body>
-</html> 
+</html>
