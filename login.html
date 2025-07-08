@@ -8,38 +8,49 @@
 </head>
 <body>
   <div class="container mt-5">
-    <h2>Login</h2>
+    <h2 class="mb-4">🔐 Login to Mini Jumia</h2>
     <form id="loginForm">
       <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
+        <label class="form-label">Username</label>
         <input type="text" id="username" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
+        <label class="form-label">Password</label>
         <input type="password" id="password" class="form-control" required />
       </div>
-      <button type="submit" class="btn btn-success">Login</button>
-      <p class="mt-3">Don't have an account? <a href="register.html">Register</a></p>
+      <button type="submit" class="btn btn-primary">Login</button>
     </form>
+    <p class="mt-3">Don't have an account? <a href="signup.html">Sign up</a></p>
   </div>
 
   <script>
+    // Preload admin account if not already saved
+    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+    const adminExists = existingUsers.some(user => user.username === "admin");
+
+    if (!adminExists) {
+      existingUsers.push({ username: "admin", password: "admin123" });
+      localStorage.setItem("users", JSON.stringify(existingUsers));
+    }
+
+    // Login logic
     document.getElementById("loginForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
 
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
       const users = JSON.parse(localStorage.getItem("users")) || [];
+
       const user = users.find(u => u.username === username && u.password === password);
 
-      if (!user) {
-        return alert("Invalid credentials.");
+      if (user) {
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
+        alert("✅ Login successful!");
+        window.location.href = "index.html";
+      } else {
+        alert("❌ Invalid username or password.");
       }
-
-      localStorage.setItem("loggedInUser", JSON.stringify(user));
-      alert("Login successful!");
-      window.location.href = "index.html";
     });
   </script>
 </body>
-  </html>
+</html>
