@@ -42,30 +42,11 @@
     </form>
   </div>
 
-  <!-- Display user info -->
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
+
   <script>
-    const userArea = document.getElementById("userArea");
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-
-    if (user) {
-      userArea.innerHTML = `
-        👋 Welcome, <strong>${user.username}</strong>
-        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
-      `;
-    }
-
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      alert("You have been logged out.");
-      window.location.href = "login.html";
-    }
-  </script>
-
-  <!-- Firebase + EmailJS Integration -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
@@ -76,10 +57,10 @@
       messagingSenderId: "641009946484",
       appId: "1:641009946484:web:23a692390add3827802621"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
+    // Init EmailJS
     emailjs.init("Ptt-UkfEekMW3LLrw");
 
     const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
@@ -109,7 +90,7 @@
         return;
       }
 
-      const orderId = "ORD" + Date.now().toString().slice(-6);
+      const orderId = "ORD" + Date.now();
 
       const order = {
         order_id: orderId,
@@ -119,46 +100,56 @@
         address,
         items: cartItems,
         total,
-        cost: {
-          shipping: 2000,
-          tax: 0,
-          total: total + 2000
-        },
         status: "Pending",
-        createdAt: new Date().toISOString()
+        cost: {
+          shipping: "0",
+          tax: "0",
+          total: total
+        }
       };
 
       try {
         // Save order to Firebase
-        await push(ref(db, "orders"), order);
+        await db.ref("orders").push(order);
 
-        // Send confirmation email using EmailJS
+        // Send confirmation email via EmailJS
         await emailjs.send("service_n9mp0ui", "template_lsbtgzk", {
+          order_id: orderId,
           name,
           phone,
           email,
           address,
-          order_id: orderId,
-          total: order.total.toLocaleString(),
-          cost: order.cost,
-          orders: order.items.map(item => ({
-            name: item.name,
-            price: item.price,
-            units: 1,
-            image_url: item.image || "https://via.placeholder.com/64"
-          }))
+          total: total,
+          cost: JSON.stringify(order.cost),
+          orders: JSON.stringify(order.items)
         });
 
-        // Clear cart and redirect
         localStorage.removeItem("cart");
-        alert("✅ Order placed & email sent!");
+        alert("✅ Order placed and email sent!");
         window.location.href = "history.html";
-
       } catch (error) {
-        console.error("❌ Error:", error);
-        alert("Order saved, but email failed to send.");
+        console.error("❌ Order error:", error);
+        alert("Order saved but email not sent.");
+        window.location.href = "history.html";
       }
     });
+  </script>
+
+  <!-- User Info -->
+  <script>
+    const userArea = document.getElementById("userArea");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (user) {
+      userArea.innerHTML = `
+        👋 Welcome, <strong>${user.username}</strong>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
+      `;
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    }
   </script>
 </body>
 </html>
