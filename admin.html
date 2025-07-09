@@ -46,9 +46,14 @@
       ordersTable.innerHTML = "";
       pending = shipped = revenue = count = 0;
 
+      if (!data) {
+        ordersTable.innerHTML = `<tr><td colspan="5" class="text-center">No orders yet.</td></tr>`;
+        return;
+      }
+
       for (const id in data) {
         const order = data[id];
-        const orderTotal = order.total || 0;
+        const orderTotal = parseInt(order.total) || 0;
         revenue += orderTotal;
         count++;
 
@@ -59,10 +64,10 @@
         row.innerHTML = `
           <td><strong>#${count}</strong></td>
           <td>
-            <strong>${order.name}</strong><br/>
-            <small>${order.phone || ""}</small><br/>
-            <small>${order.email || ""}</small><br/>
-            <small>${order.address || ""}</small><br/>
+            <strong>${order.name || "N/A"}</strong><br/>
+            <small>${order.phone || "N/A"}</small><br/>
+            <small>${order.email || "N/A"}</small><br/>
+            <small>${order.address || "N/A"}</small><br/>
             <small class="text-muted">🕒 ${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
           </td>
           <td>
@@ -95,7 +100,7 @@
     window.updateStatus = (id, newStatus) => {
       update(ref(db, `orders/${id}`), { status: newStatus });
       alert("Status updated.");
-    }
+    };
 
     window.resendEmail = async (order) => {
       try {
@@ -114,12 +119,12 @@
             image_url: p.image || "https://via.placeholder.com/64"
           }))
         });
-        alert("Email resent!");
+        alert("✅ Email resent!");
       } catch (err) {
         console.error("❌ Failed to resend email:", err);
-        alert("Email failed to resend");
+        alert("Email failed to resend.");
       }
-    }
+    };
   </script>
 </head>
 <body>
@@ -165,6 +170,7 @@
         </div>
       </div>
     </div>
+
     <h4 class="mb-3">📦 Manage Orders</h4>
     <div class="table-responsive">
       <table class="table table-bordered align-middle">
@@ -181,6 +187,7 @@
       </table>
     </div>
   </div>
+
   <script>
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -193,10 +200,11 @@
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
       `;
     }
+
     function logout() {
       localStorage.removeItem("loggedInUser");
       window.location.href = "login.html";
     }
   </script>
 </body>
-</html>
+      </html>
