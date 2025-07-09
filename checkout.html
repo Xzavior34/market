@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Checkout - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
@@ -17,7 +18,6 @@
 
   <div class="container mt-4">
     <h2>🧾 Checkout</h2>
-
     <ul class="list-group mb-3" id="cartItems"></ul>
     <p><strong>Total:</strong> ₦<span id="total">0</span></p>
 
@@ -31,6 +31,10 @@
         <input type="tel" id="phone" class="form-control" required />
       </div>
       <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" required />
+      </div>
+      <div class="mb-3">
         <label class="form-label">Address</label>
         <textarea id="address" class="form-control" required></textarea>
       </div>
@@ -38,53 +42,7 @@
     </form>
   </div>
 
-  <script>
-    // Show cart items
-    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
-    const cartList = document.getElementById("cartItems");
-    const totalElement = document.getElementById("total");
-    let total = 0;
-
-    cartItems.forEach(item => {
-      const li = document.createElement("li");
-      li.className = "list-group-item";
-      li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
-      cartList.appendChild(li);
-      total += item.price;
-    });
-
-    totalElement.textContent = total.toLocaleString();
-
-    // Handle form submission
-    document.getElementById("checkoutForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const name = document.getElementById("name").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const address = document.getElementById("address").value.trim();
-
-      if (!name || !phone || !address) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
-      const order = {
-        name,
-        phone,
-        address,
-        items: cartItems
-      };
-
-      const orderHistory = JSON.parse(localStorage.getItem("orderHistory")) || [];
-      orderHistory.push(order);
-      localStorage.setItem("orderHistory", JSON.stringify(orderHistory));
-      localStorage.removeItem("cart");
-
-      alert("✅ Order placed successfully!");
-      window.location.href = "history.html"; // Redirect to order history
-    });
-  </script>
-
+  <!-- Display user info -->
   <script>
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -102,5 +60,105 @@
       window.location.href = "login.html";
     }
   </script>
+
+  <!-- Firebase + EmailJS Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    emailjs.init("Ptt-UkfEekMW3LLrw");
+
+    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartList = document.getElementById("cartItems");
+    const totalElement = document.getElementById("total");
+
+    let total = 0;
+    cartItems.forEach(item => {
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
+      cartList.appendChild(li);
+      total += item.price;
+    });
+    totalElement.textContent = total.toLocaleString();
+
+    document.getElementById("checkoutForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const address = document.getElementById("address").value.trim();
+
+      if (!name || !phone || !email || !address) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const orderId = "ORD" + Date.now().toString().slice(-6);
+
+      const order = {
+        order_id: orderId,
+        name,
+        phone,
+        email,
+        address,
+        items: cartItems,
+        total,
+        cost: {
+          shipping: 2000,
+          tax: 0,
+          total: total + 2000
+        },
+        status: "Pending",
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        // Save order to Firebase
+        await push(ref(db, "orders"), order);
+
+        // Send confirmation email using EmailJS
+        await emailjs.send("service_n9mp0ui", "template_lsbtgzk", {
+          name,
+          phone,
+          email,
+          address,
+          order_id: orderId,
+          total: order.total.toLocaleString(),
+          cost: order.cost,
+          orders: order.items.map(item => ({
+            name: item.name,
+            price: item.price,
+            units: 1,
+            image_url: item.image || "https://via.placeholder.com/64"
+          }))
+        });
+
+        // Clear cart and redirect
+        localStorage.removeItem("cart");
+        alert("✅ Order placed & email sent!");
+        window.location.href = "history.html";
+
+      } catch (error) {
+        console.error("❌ Error:", error);
+        alert("Order saved, but email failed to send.");
+      }
+    });
+  </script>
 </body>
-  </html>
+</html>
