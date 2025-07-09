@@ -16,7 +16,14 @@
   </nav>
 
   <div class="container mt-4">
-    <h2>📊 Admin Dashboard</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>📊 Admin Dashboard</h2>
+      <div>
+        <a href="upload.html" class="btn btn-success me-2">Upload Product</a>
+        <a href="edit-products.html" class="btn btn-warning">Edit Products</a>
+      </div>
+    </div>
+
     <div class="row my-4">
       <div class="col-md-3">
         <div class="card text-bg-primary mb-3">
@@ -69,7 +76,6 @@
     </div>
   </div>
 
-  <!-- Firebase + Admin Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
@@ -89,21 +95,9 @@
     const db = getDatabase(app);
     emailjs.init("Ptt-UkfEekMW3LLrw");
 
-    const ordersTable = document.getElementById("ordersTable");
-    const totalOrders = document.getElementById("totalOrders");
-    const pendingOrders = document.getElementById("pendingOrders");
-    const shippedOrders = document.getElementById("shippedOrders");
-    const totalRevenue = document.getElementById("totalRevenue");
-
-    const statusColor = {
-      "Pending": "warning",
-      "Shipped": "primary",
-      "Delivered": "success"
-    };
-
     window.updateStatus = (id, newStatus) => {
       update(ref(db, `orders/${id}`), { status: newStatus });
-      alert("✅ Status updated");
+      alert("✅ Status updated.");
     };
 
     window.resendEmail = async (order) => {
@@ -116,11 +110,11 @@
           address: order.address,
           total: order.total?.toLocaleString(),
           cost: order.cost,
-          orders: (order.items || []).map(item => ({
-            name: item.name,
-            price: item.price,
+          orders: (order.items || []).map(p => ({
+            name: p.name,
+            price: p.price,
             units: 1,
-            image_url: item.image || "https://via.placeholder.com/64"
+            image_url: p.image || "https://via.placeholder.com/64"
           }))
         });
         alert("📧 Email resent!");
@@ -130,8 +124,19 @@
       }
     };
 
-    // Load data on page load
     document.addEventListener("DOMContentLoaded", () => {
+      const ordersTable = document.getElementById("ordersTable");
+      const totalOrders = document.getElementById("totalOrders");
+      const pendingOrders = document.getElementById("pendingOrders");
+      const shippedOrders = document.getElementById("shippedOrders");
+      const totalRevenue = document.getElementById("totalRevenue");
+
+      const statusColor = {
+        "Pending": "warning",
+        "Shipped": "primary",
+        "Delivered": "success"
+      };
+
       onValue(ref(db, "orders"), snapshot => {
         const data = snapshot.val();
         ordersTable.innerHTML = "";
@@ -150,9 +155,9 @@
             <td>#${count}</td>
             <td>
               <strong>${order.name}</strong><br/>
-              <small>${order.phone}</small><br/>
-              <small>${order.email}</small><br/>
-              <small>${order.address}</small><br/>
+              <small>${order.phone || ""}</small><br/>
+              <small>${order.email || ""}</small><br/>
+              <small>${order.address || ""}</small><br/>
               <small class="text-muted">${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
             </td>
             <td>
@@ -183,7 +188,6 @@
   </script>
 
   <script>
-    // Admin authentication
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user || user.role !== "admin") {
@@ -202,4 +206,4 @@
     }
   </script>
 </body>
-  </html>
+</html>
