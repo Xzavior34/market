@@ -5,128 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Dashboard - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-    import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js";
-
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-      authDomain: "mini-jumia-42773.firebaseapp.com",
-      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-      projectId: "mini-jumia-42773",
-      storageBucket: "mini-jumia-42773.appspot.com",
-      messagingSenderId: "641009946484",
-      appId: "1:641009946484:web:23a692390add3827802621"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    emailjs.init("Ptt-UkfEekMW3LLrw");
-
-    // DOM references
-    const ordersTable = document.getElementById("ordersTable");
-    const totalOrders = document.getElementById("totalOrders");
-    const pendingOrders = document.getElementById("pendingOrders");
-    const shippedOrders = document.getElementById("shippedOrders");
-    const totalRevenue = document.getElementById("totalRevenue");
-
-    let pending = 0, shipped = 0, revenue = 0, count = 0;
-
-    const statusColor = {
-      "Pending": "warning",
-      "Shipped": "primary",
-      "Delivered": "success"
-    };
-
-    onValue(ref(db, "orders"), snapshot => {
-      const data = snapshot.val();
-      ordersTable.innerHTML = "";
-      pending = shipped = revenue = count = 0;
-
-      if (data) {
-        for (const id in data) {
-          const order = data[id];
-          const orderTotal = order.total || 0;
-          revenue += orderTotal;
-          count++;
-
-          if (order.status === "Pending") pending++;
-          if (order.status === "Shipped") shipped++;
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td><strong>#${count}</strong></td>
-            <td>
-              <strong>${order.name}</strong><br/>
-              <small>${order.phone || ""}</small><br/>
-              <small>${order.email || ""}</small><br/>
-              <small>${order.address || ""}</small><br/>
-              <small class="text-muted">🕒 ${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
-            </td>
-            <td>
-              <ul class="mb-0">
-                ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
-              </ul>
-              <small class="text-muted">Total: ₦${orderTotal.toLocaleString()}</small>
-            </td>
-            <td>
-              <span class="badge bg-${statusColor[order.status] || 'secondary'}">${order.status}</span>
-            </td>
-            <td>
-              <select class="form-select form-select-sm mb-2" onchange="updateStatus('${id}', this.value)">
-                <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-                <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
-                <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
-              </select>
-              <button class="btn btn-sm btn-outline-secondary" onclick='resendEmail(${JSON.stringify(order)})'>Resend Email</button>
-            </td>
-          `;
-          ordersTable.appendChild(row);
-        }
-      }
-
-      totalOrders.textContent = count;
-      pendingOrders.textContent = pending;
-      shippedOrders.textContent = shipped;
-      totalRevenue.textContent = revenue.toLocaleString();
-    });
-
-    // Expose these to the global scope
-    window.updateStatus = (id, newStatus) => {
-      update(ref(db, `orders/${id}`), { status: newStatus });
-      alert("Status updated.");
-    }
-
-    window.resendEmail = async (order) => {
-      try {
-        await emailjs.send("service_n9mp0ui", "template_lsbtgzk", {
-          order_id: order.order_id,
-          name: order.name,
-          phone: order.phone,
-          email: order.email,
-          address: order.address,
-          total: order.total?.toLocaleString(),
-          cost: order.cost,
-          orders: (order.items || []).map(p => ({
-            name: p.name,
-            price: p.price,
-            units: 1,
-            image_url: p.image || "https://via.placeholder.com/64"
-          }))
-        });
-        alert("Email resent!");
-      } catch (err) {
-        console.error("❌ Failed to resend email:", err);
-        alert("Email failed to resend");
-      }
-    };
-  </script>
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
+
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
@@ -135,7 +17,6 @@
 
   <div class="container mt-4">
     <h2>📊 Admin Dashboard</h2>
-
     <div class="row my-4">
       <div class="col-md-3">
         <div class="card text-bg-primary mb-3">
@@ -188,7 +69,121 @@
     </div>
   </div>
 
+  <!-- Firebase + Admin Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    emailjs.init("Ptt-UkfEekMW3LLrw");
+
+    const ordersTable = document.getElementById("ordersTable");
+    const totalOrders = document.getElementById("totalOrders");
+    const pendingOrders = document.getElementById("pendingOrders");
+    const shippedOrders = document.getElementById("shippedOrders");
+    const totalRevenue = document.getElementById("totalRevenue");
+
+    const statusColor = {
+      "Pending": "warning",
+      "Shipped": "primary",
+      "Delivered": "success"
+    };
+
+    window.updateStatus = (id, newStatus) => {
+      update(ref(db, `orders/${id}`), { status: newStatus });
+      alert("✅ Status updated");
+    };
+
+    window.resendEmail = async (order) => {
+      try {
+        await emailjs.send("service_n9mp0ui", "template_lsbtgzk", {
+          order_id: order.order_id,
+          name: order.name,
+          phone: order.phone,
+          email: order.email,
+          address: order.address,
+          total: order.total?.toLocaleString(),
+          cost: order.cost,
+          orders: (order.items || []).map(item => ({
+            name: item.name,
+            price: item.price,
+            units: 1,
+            image_url: item.image || "https://via.placeholder.com/64"
+          }))
+        });
+        alert("📧 Email resent!");
+      } catch (err) {
+        console.error("Email resend failed:", err);
+        alert("❌ Failed to resend email.");
+      }
+    };
+
+    // Load data on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      onValue(ref(db, "orders"), snapshot => {
+        const data = snapshot.val();
+        ordersTable.innerHTML = "";
+
+        let total = 0, pending = 0, shipped = 0, count = 0;
+
+        for (const id in data) {
+          const order = data[id];
+          total += order.total || 0;
+          count++;
+          if (order.status === "Pending") pending++;
+          if (order.status === "Shipped") shipped++;
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>#${count}</td>
+            <td>
+              <strong>${order.name}</strong><br/>
+              <small>${order.phone}</small><br/>
+              <small>${order.email}</small><br/>
+              <small>${order.address}</small><br/>
+              <small class="text-muted">${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
+            </td>
+            <td>
+              <ul>
+                ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
+              </ul>
+              <small>Total: ₦${(order.total || 0).toLocaleString()}</small>
+            </td>
+            <td><span class="badge bg-${statusColor[order.status] || "secondary"}">${order.status}</span></td>
+            <td>
+              <select class="form-select form-select-sm" onchange="updateStatus('${id}', this.value)">
+                <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+                <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+                <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary mt-2" onclick='resendEmail(${JSON.stringify(order)})'>Resend Email</button>
+            </td>
+          `;
+          ordersTable.appendChild(row);
+        }
+
+        totalOrders.textContent = count;
+        pendingOrders.textContent = pending;
+        shippedOrders.textContent = shipped;
+        totalRevenue.textContent = total.toLocaleString();
+      });
+    });
+  </script>
+
   <script>
+    // Admin authentication
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user || user.role !== "admin") {
@@ -207,4 +202,4 @@
     }
   </script>
 </body>
-              </html>
+  </html>
