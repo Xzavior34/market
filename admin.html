@@ -10,6 +10,7 @@
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js";
 
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -20,20 +21,19 @@
       appId: "1:641009946484:web:23a692390add3827802621"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     emailjs.init("Ptt-UkfEekMW3LLrw");
 
+    // DOM references
     const ordersTable = document.getElementById("ordersTable");
     const totalOrders = document.getElementById("totalOrders");
     const pendingOrders = document.getElementById("pendingOrders");
     const shippedOrders = document.getElementById("shippedOrders");
     const totalRevenue = document.getElementById("totalRevenue");
 
-    let pending = 0;
-    let shipped = 0;
-    let revenue = 0;
-    let count = 0;
+    let pending = 0, shipped = 0, revenue = 0, count = 0;
 
     const statusColor = {
       "Pending": "warning",
@@ -46,49 +46,46 @@
       ordersTable.innerHTML = "";
       pending = shipped = revenue = count = 0;
 
-      if (!data) {
-        ordersTable.innerHTML = `<tr><td colspan="5" class="text-center">No orders yet.</td></tr>`;
-        return;
-      }
+      if (data) {
+        for (const id in data) {
+          const order = data[id];
+          const orderTotal = order.total || 0;
+          revenue += orderTotal;
+          count++;
 
-      for (const id in data) {
-        const order = data[id];
-        const orderTotal = parseInt(order.total) || 0;
-        revenue += orderTotal;
-        count++;
+          if (order.status === "Pending") pending++;
+          if (order.status === "Shipped") shipped++;
 
-        if (order.status === "Pending") pending++;
-        if (order.status === "Shipped") shipped++;
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td><strong>#${count}</strong></td>
-          <td>
-            <strong>${order.name || "N/A"}</strong><br/>
-            <small>${order.phone || "N/A"}</small><br/>
-            <small>${order.email || "N/A"}</small><br/>
-            <small>${order.address || "N/A"}</small><br/>
-            <small class="text-muted">🕒 ${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
-          </td>
-          <td>
-            <ul class="mb-0">
-              ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
-            </ul>
-            <small class="text-muted">Total: ₦${orderTotal.toLocaleString()}</small>
-          </td>
-          <td>
-            <span class="badge bg-${statusColor[order.status] || 'secondary'}">${order.status}</span>
-          </td>
-          <td>
-            <select class="form-select form-select-sm mb-2" onchange="updateStatus('${id}', this.value)">
-              <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-              <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
-              <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
-            </select>
-            <button class="btn btn-sm btn-outline-secondary" onclick='resendEmail(${JSON.stringify(order)})'>Resend Email</button>
-          </td>
-        `;
-        ordersTable.appendChild(row);
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>#${count}</strong></td>
+            <td>
+              <strong>${order.name}</strong><br/>
+              <small>${order.phone || ""}</small><br/>
+              <small>${order.email || ""}</small><br/>
+              <small>${order.address || ""}</small><br/>
+              <small class="text-muted">🕒 ${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
+            </td>
+            <td>
+              <ul class="mb-0">
+                ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
+              </ul>
+              <small class="text-muted">Total: ₦${orderTotal.toLocaleString()}</small>
+            </td>
+            <td>
+              <span class="badge bg-${statusColor[order.status] || 'secondary'}">${order.status}</span>
+            </td>
+            <td>
+              <select class="form-select form-select-sm mb-2" onchange="updateStatus('${id}', this.value)">
+                <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+                <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+                <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary" onclick='resendEmail(${JSON.stringify(order)})'>Resend Email</button>
+            </td>
+          `;
+          ordersTable.appendChild(row);
+        }
       }
 
       totalOrders.textContent = count;
@@ -97,10 +94,11 @@
       totalRevenue.textContent = revenue.toLocaleString();
     });
 
+    // Expose these to the global scope
     window.updateStatus = (id, newStatus) => {
       update(ref(db, `orders/${id}`), { status: newStatus });
       alert("Status updated.");
-    };
+    }
 
     window.resendEmail = async (order) => {
       try {
@@ -119,10 +117,10 @@
             image_url: p.image || "https://via.placeholder.com/64"
           }))
         });
-        alert("✅ Email resent!");
+        alert("Email resent!");
       } catch (err) {
         console.error("❌ Failed to resend email:", err);
-        alert("Email failed to resend.");
+        alert("Email failed to resend");
       }
     };
   </script>
@@ -134,8 +132,10 @@
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
     </div>
   </nav>
+
   <div class="container mt-4">
     <h2>📊 Admin Dashboard</h2>
+
     <div class="row my-4">
       <div class="col-md-3">
         <div class="card text-bg-primary mb-3">
@@ -207,4 +207,4 @@
     }
   </script>
 </body>
-      </html>
+              </html>
