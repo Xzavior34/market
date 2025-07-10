@@ -53,43 +53,42 @@
     const db = getDatabase(app);
 
     const defaultProducts = [
-      {
-        id: 1,
-        name: "Wireless Earbuds",
-        price: 7500,
-        image: "https://images.unsplash.com/photo-1581260032066-e3b4f80b20b1?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 2,
-        name: "Smartphone",
-        price: 45000,
-        image: "https://images.unsplash.com/photo-1510557880182-3f8f5f67f1e9?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 3,
-        name: "Sneakers",
-        price: 12000,
-        image: "https://images.unsplash.com/photo-1583337130417-3346a1c1026e?auto=format&fit=crop&w=600&q=80",
-        category: "Fashion"
-      },
-      {
-        id: 4,
-        name: "Bluetooth Speaker",
-        price: 9500,
-        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 5,
-        name: "Smart Television",
-        price: 950000,
-        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      }
-    ];
-
+  {
+    id: 1,
+    name: "Wireless Earbuds",
+    price: 7500,
+    image: "https://source.unsplash.com/600x400/?earbuds,wireless",
+    category: "Electronics"
+  },
+  {
+    id: 2,
+    name: "Smartphone",
+    price: 45000,
+    image: "https://source.unsplash.com/600x400/?smartphone,mobile",
+    category: "Electronics"
+  },
+  {
+    id: 3,
+    name: "Sneakers",
+    price: 12000,
+    image: "https://source.unsplash.com/600x400/?sneakers,shoes",
+    category: "Fashion"
+  },
+  {
+    id: 4,
+    name: "Bluetooth Speaker",
+    price: 9500,
+    image: "https://source.unsplash.com/600x400/?bluetooth,speaker",
+    category: "Electronics"
+  },
+  {
+    id: 5,
+    name: "Smart Television",
+    price: 950000,
+    image: "https://source.unsplash.com/600x400/?smart-tv,television",
+    category: "Electronics"
+  }
+];
     const productList = document.getElementById("productList");
     const categoryFilter = document.getElementById("categoryFilter");
     let allProducts = [...defaultProducts];
