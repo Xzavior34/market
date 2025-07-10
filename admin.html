@@ -9,9 +9,9 @@
   <div id="userArea" class="text-end p-2"></div>  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
-      <div class="d-flex">
-        <a class="btn btn-outline-light me-2" href="upload.html">Upload Product</a>
-        <a class="btn btn-outline-light" href="edit-products.html">Edit Products</a>
+      <div>
+        <a href="upload.html" class="btn btn-sm btn-light me-2">Upload Product</a>
+        <a href="edit-products.html" class="btn btn-sm btn-warning">Edit Products</a>
       </div>
     </div>
   </nav>  <div class="container mt-4">
@@ -58,17 +58,16 @@
         <th>Customer Info</th>
         <th>Items</th>
         <th>Status</th>
-        <th>Change Status / Resend Email</th>
+        <th>Change Status</th>
       </tr>
     </thead>
     <tbody id="ordersTable"></tbody>
   </table>
 </div>
 
-  </div>  <script type="module">
+  </div>  <!-- Firebase Admin Script -->  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-    import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
@@ -82,7 +81,6 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    emailjs.init("Ptt-UkfEekMW3LLrw");
 
     const ordersTable = document.getElementById("ordersTable");
     const totalOrders = document.getElementById("totalOrders");
@@ -101,77 +99,56 @@
       alert("✅ Status updated");
     };
 
-    window.resendEmail = async (order) => {
-      try {
-        await emailjs.send("service_n9mp0ui", "template_lsbtgzk", {
-          order_id: order.order_id,
-          name: order.name,
-          phone: order.phone,
-          email: order.email,
-          address: order.address,
-          total: order.total?.toLocaleString(),
-          cost: order.cost,
-          orders: (order.items || []).map(p => ({
-            name: p.name,
-            price: p.price,
-            units: 1,
-            image_url: p.image || "https://via.placeholder.com/64"
-          }))
-        });
-        alert("📧 Email resent!");
-      } catch (err) {
-        console.error("Email resend failed:", err);
-        alert("❌ Failed to resend email.");
-      }
-    };
+    document.addEventListener("DOMContentLoaded", () => {
+      onValue(ref(db, "orders"), snapshot => {
+        const data = snapshot.val();
+        ordersTable.innerHTML = "";
 
-    onValue(ref(db, "orders"), snapshot => {
-      const data = snapshot.val();
-      ordersTable.innerHTML = "";
-      let total = 0, pending = 0, shipped = 0, count = 0;
+        let total = 0, pending = 0, shipped = 0, count = 0;
 
-      for (const id in data) {
-        const order = data[id];
-        total += order.total || 0;
-        count++;
-        if (order.status === "Pending") pending++;
-        if (order.status === "Shipped") shipped++;
+        for (const id in data) {
+          const order = data[id];
+          total += order.total || 0;
+          count++;
+          if (order.status === "Pending") pending++;
+          if (order.status === "Shipped") shipped++;
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>#${count}</td>
-          <td>
-            <strong>${order.name}</strong><br/>
-            <small>${order.phone}</small><br/>
-            <small>${order.email}</small><br/>
-            <small>${order.address}</small><br/>
-            <small class="text-muted">${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
-          </td>
-          <td>
-            <ul>
-              ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
-            </ul>
-            <small>Total: ₦${(order.total || 0).toLocaleString()}</small>
-          </td>
-          <td><span class="badge bg-${statusColor[order.status] || "secondary"}">${order.status}</span></td>
-          <td>
-            <select class="form-select form-select-sm" onchange="updateStatus('${id}', this.value)">
-              <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-              <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
-              <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
-            </select>
-            <button class="btn btn-sm btn-outline-secondary mt-2" onclick='resendEmail(${JSON.stringify(order)})'>Resend Email</button>
-          </td>
-        `;
-        ordersTable.appendChild(row);
-      }
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>#${count}</td>
+            <td>
+              <strong>${order.name}</strong><br/>
+              <small>${order.phone}</small><br/>
+              <small>${order.email}</small><br/>
+              <small>${order.address}</small><br/>
+              <small class="text-muted">${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
+            </td>
+            <td>
+              <ul>
+                ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
+              </ul>
+              <small>Total: ₦${(order.total || 0).toLocaleString()}</small>
+            </td>
+            <td><span class="badge bg-${statusColor[order.status] || "secondary"}">${order.status}</span></td>
+            <td>
+              <select class="form-select form-select-sm" onchange="updateStatus('${id}', this.value)">
+                <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+                <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+                <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
+              </select>
+            </td>
+          `;
+          ordersTable.appendChild(row);
+        }
 
-      totalOrders.textContent = count;
-      pendingOrders.textContent = pending;
-      shippedOrders.textContent = shipped;
-      totalRevenue.textContent = total.toLocaleString();
+        totalOrders.textContent = count;
+        pendingOrders.textContent = pending;
+        shippedOrders.textContent = shipped;
+        totalRevenue.textContent = total.toLocaleString();
+      });
     });
   </script>  <script>
+    // Admin authentication
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user || user.role !== "admin") {
@@ -189,4 +166,4 @@
       window.location.href = "login.html";
     }
   </script></body>
-  </html>
+</html>
