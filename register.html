@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Register - Mini Jumia</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" type="image/png" />
+  <meta name="theme-color" content="#0d6efd" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -19,38 +22,76 @@
         <input type="password" id="password" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label for="name" class="form-label">name</label>
-        <input type="name" id="name" class="form-control" required />
+        <label for="name" class="form-label">Name</label>
+        <input type="text" id="name" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label for="surname" class="form-label">surname</label>
-        <input type="surname" id="surname" class="form-control" required />
+        <label for="surname" class="form-label">Surname</label>
+        <input type="text" id="surname" class="form-control" required />
       </div>
       <button type="submit" class="btn btn-primary">Register</button>
       <p class="mt-3">Already have an account? <a href="login.html">Login</a></p>
     </form>
   </div>
 
-  <script>
-    document.getElementById("registerForm").addEventListener("submit", function(e) {
+  <!-- Firebase + Registration Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+
       const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
+      const password = document.getElementById("password").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const surname = document.getElementById("surname").value.trim();
 
-      if (!username || !password) {
-        return alert("Please fill in all fields.");
+      if (!username || !password || !name || !surname) {
+        return alert("⚠️ Please fill in all fields.");
       }
 
+      // Check if user already exists
+      const snapshot = await get(child(ref(db), `users/${username.replace(/\W/g, "_")}`));
+      if (snapshot.exists()) {
+        return alert("❌ Username already exists.");
+      }
+
+      const userData = { username, password, name, surname, role: "user" };
+
+      // Save to Firebase
+      await set(ref(db, `users/${username.replace(/\W/g, "_")}`), userData);
+
+      // Save to localStorage
       let users = JSON.parse(localStorage.getItem("users")) || [];
-      if (users.find(u => u.username === username)) {
-        return alert("Username already exists.");
-      }
-
-      users.push({ username, password });
+      users.push(userData);
       localStorage.setItem("users", JSON.stringify(users));
-      alert("Registration successful. Please log in.");
+
+      alert("✅ Registration successful. Please log in.");
       window.location.href = "login.html";
     });
+  </script>
+
+  <!-- PWA Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.error("❌ SW registration failed:", err));
+    }
   </script>
 </body>
 </html>
