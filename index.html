@@ -53,42 +53,43 @@
     const db = getDatabase(app);
 
     const defaultProducts = [
-  {
-    id: 1,
-    name: "Wireless Earbuds",
-    price: 7500,
-    image: "https://source.unsplash.com/600x400/?earbuds,wireless",
-    category: "Electronics"
-  },
-  {
-    id: 2,
-    name: "Smartphone",
-    price: 45000,
-    image: "https://source.unsplash.com/600x400/?smartphone,mobile",
-    category: "Electronics"
-  },
-  {
-    id: 3,
-    name: "Sneakers",
-    price: 12000,
-    image: "https://source.unsplash.com/600x400/?sneakers,shoes",
-    category: "Fashion"
-  },
-  {
-    id: 4,
-    name: "Bluetooth Speaker",
-    price: 9500,
-    image: "https://source.unsplash.com/600x400/?bluetooth,speaker",
-    category: "Electronics"
-  },
-  {
-    id: 5,
-    name: "Smart Television",
-    price: 950000,
-    image: "https://source.unsplash.com/600x400/?smart-tv,television",
-    category: "Electronics"
-  }
-];
+      {
+        id: 1,
+        name: "Wireless Earbuds",
+        price: 7500,
+        image: "https://images.unsplash.com/photo-1606813909184-589d7c46f5ef?auto=format&fit=crop&w=600&q=80",
+        category: "Electronics"
+      },
+      {
+        id: 2,
+        name: "Smartphone",
+        price: 45000,
+        image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52bc?auto=format&fit=crop&w=600&q=80",
+        category: "Electronics"
+      },
+      {
+        id: 3,
+        name: "Sneakers",
+        price: 12000,
+        image: "https://images.unsplash.com/photo-1600185365089-07b3c4bc9624?auto=format&fit=crop&w=600&q=80",
+        category: "Fashion"
+      },
+      {
+        id: 4,
+        name: "Bluetooth Speaker",
+        price: 9500,
+        image: "https://images.unsplash.com/photo-1612336307427-51c70ffce70d?auto=format&fit=crop&w=600&q=80",
+        category: "Electronics"
+      },
+      {
+        id: 5,
+        name: "Smart Television",
+        price: 950000,
+        image: "https://images.unsplash.com/photo-1571847144126-04c5a0d8264c?auto=format&fit=crop&w=600&q=80",
+        category: "Electronics"
+      }
+    ];
+
     const productList = document.getElementById("productList");
     const categoryFilter = document.getElementById("categoryFilter");
     let allProducts = [...defaultProducts];
@@ -97,7 +98,7 @@
     onValue(ref(db, "products"), (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const firebaseProducts = Object.entries(data).map(([key, val]) => ({ ...val, id: val.id || key }));
+        const firebaseProducts = Object.values(data);
         allProducts = [...defaultProducts, ...firebaseProducts];
       }
 
@@ -116,20 +117,13 @@
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary w-100" onclick='addToCart(${JSON.stringify(product)})'>Add to Cart</button>
+              <button class="btn btn-primary w-100" onclick="addToCart(${product.id})">Add to Cart</button>
             </div>
           </div>
         `;
         productList.appendChild(col);
       });
     }
-
-    window.addToCart = function(product) {
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      alert(`${product.name} added to cart!`);
-    };
 
     function populateCategories() {
       const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
@@ -150,6 +144,14 @@
       );
       renderProducts(filtered);
     };
+
+    window.addToCart = function(productId) {
+      const product = allProducts.find(p => p.id === productId);
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push(product);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert(`${product.name} added to cart!`);
+    }
   </script>  <script>
     const userArea = document.getElementById("userArea");
     const viewOrderBtn = document.getElementById("viewOrderBtn");
