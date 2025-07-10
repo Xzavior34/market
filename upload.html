@@ -4,42 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Upload Product - Mini Jumia</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
+  <link rel="icon" href="icon-192.png" type="image/png" />
   <meta name="theme-color" content="#0d6efd" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
+
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="admin.html">← Admin Dashboard</a>
+    </div>
+  </nav>
 
   <div class="container mt-4">
     <h2>📤 Upload Product</h2>
     <form id="uploadForm">
       <div class="mb-3">
-        <label for="productName" class="form-label">Product Name</label>
-        <input type="text" class="form-control" id="productName" required />
+        <label class="form-label">Product Name</label>
+        <input type="text" id="productName" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label for="productPrice" class="form-label">Price (₦)</label>
-        <input type="number" class="form-control" id="productPrice" required />
+        <label class="form-label">Price (₦)</label>
+        <input type="number" id="productPrice" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label for="productCategory" class="form-label">Category</label>
-        <input type="text" class="form-control" id="productCategory" required />
-      </div>
-      <div class="mb-3">
-        <label for="productImage" class="form-label">Image URL</label>
-        <input type="url" class="form-control" id="productImage" placeholder="https://..." required />
+        <label class="form-label">Category</label>
+        <input type="text" id="productCategory" class="form-control" required />
       </div>
       <button type="submit" class="btn btn-primary">Upload</button>
     </form>
-    <a href="admin.html" class="btn btn-secondary mt-3">← Back to Dashboard</a>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -49,33 +50,49 @@
       messagingSenderId: "641009946484",
       appId: "1:641009946484:web:23a692390add3827802621"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const uploadForm = document.getElementById("uploadForm");
-
-    uploadForm.addEventListener("submit", e => {
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const name = document.getElementById("productName").value;
+
+      const name = document.getElementById("productName").value.trim();
       const price = parseFloat(document.getElementById("productPrice").value);
-      const category = document.getElementById("productCategory").value;
-      const image = document.getElementById("productImage").value;
+      const category = document.getElementById("productCategory").value.trim();
 
-      const product = { name, price, category, image, createdAt: Date.now() };
-      push(ref(db, "products"), product);
+      if (!name || isNaN(price) || !category) {
+        alert("Please fill all fields correctly.");
+        return;
+      }
 
-      alert("✅ Product uploaded!");
-      uploadForm.reset();
+      // Unsplash image based on product category or name
+      const unsplashURL = `https://source.unsplash.com/featured/?${encodeURIComponent(name + "," + category)}`;
+
+      const product = {
+        id: Date.now(),
+        name,
+        price,
+        category,
+        image: unsplashURL
+      };
+
+      try {
+        await db.ref("products").push(product);
+        alert("✅ Product uploaded!");
+        document.getElementById("uploadForm").reset();
+      } catch (error) {
+        alert("❌ Error uploading product.");
+        console.error(error);
+      }
     });
   </script>
 
+  <!-- Admin Auth + Logout -->
   <script>
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-
     if (!user || user.role !== "admin") {
-      alert("Access denied. Admins only.");
+      alert("Access denied.");
       window.location.href = "login.html";
     } else {
       userArea.innerHTML = `
@@ -83,18 +100,17 @@
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
       `;
     }
-
     function logout() {
       localStorage.removeItem("loggedInUser");
       window.location.href = "login.html";
     }
   </script>
 
+  <!-- PWA -->
   <script>
-    // PWA: Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js").then(() => {
-        console.log("✅ Service Worker registered (upload.html)");
+        console.log("✅ Service Worker registered.");
       });
     }
   </script>
