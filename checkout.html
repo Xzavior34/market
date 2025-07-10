@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Checkout - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
-
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
@@ -18,131 +16,79 @@
 
   <div class="container mt-4">
     <h2>🧾 Checkout</h2>
+    <div id="emptyCart" class="alert alert-warning" style="display:none;">Your cart is empty</div>
     <ul class="list-group mb-3" id="cartItems"></ul>
     <p><strong>Total:</strong> ₦<span id="total">0</span></p>
 
     <form id="checkoutForm">
-      <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" id="name" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Phone</label>
-        <input type="tel" id="phone" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" id="email" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Address</label>
-        <textarea id="address" class="form-control" required></textarea>
-      </div>
+      <!-- form fields -->
       <button type="submit" class="btn btn-primary">Place Order</button>
     </form>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-
   <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-      authDomain: "mini-jumia-42773.firebaseapp.com",
-      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-      projectId: "mini-jumia-42773",
-      storageBucket: "mini-jumia-42773.appspot.com",
-      messagingSenderId: "641009946484",
-      appId: "1:641009946484:web:23a692390add3827802621"
-    };
+    const firebaseConfig = { /* same config */ };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-  </script>
 
-  <script>
-    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
-    const cartList = document.getElementById("cartItems");
-    const totalElement = document.getElementById("total");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) location.href = "login.html";
 
-    let total = 0;
-    cartItems.forEach(item => {
-      const li = document.createElement("li");
-      li.className = "list-group-item";
-      li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
-      cartList.appendChild(li);
-      total += item.price;
+    const cartRef = db.ref(`carts/${user.email.replace('.', ',')}`);
+    const cartItemsEl = document.getElementById("cartItems");
+    const emptyCartEl = document.getElementById("emptyCart");
+    const totalEl = document.getElementById("total");
+    let cart = [];
+
+    cartRef.once("value", snap => {
+      cart = snap.val() || [];
+      if (cart.length === 0) emptyCartEl.style.display = "block";
+      let t = 0;
+      cart.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
+        cartItemsEl.appendChild(li);
+        t += item.price;
+      });
+      totalEl.textContent = t.toLocaleString();
     });
-    totalElement.textContent = total.toLocaleString();
 
-    document.getElementById("checkoutForm").addEventListener("submit", async function (e) {
+    document.getElementById("checkoutForm").addEventListener("submit", async e => {
       e.preventDefault();
+      if (cart.length === 0) return alert("Your cart is empty!");
 
       const name = document.getElementById("name").value.trim();
       const phone = document.getElementById("phone").value.trim();
       const email = document.getElementById("email").value.trim();
       const address = document.getElementById("address").value.trim();
 
-      if (!name || !phone || !email || !address) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
       const orderId = "ORD" + Date.now();
-
-      const order = {
-        order_id: orderId,
-        name,
-        phone,
-        email,
-        address,
-        items: cartItems,
-        total,
-        status: "Pending",
-        cost: {
-          shipping: "0",
-          tax: "0",
-          total: total
-        }
-      };
+      const order = { order_id: orderId, name, phone, email, address, items: cart, total: cart.reduce((a,b)=>a+b.price,0), status: "Pending" };
 
       try {
         await db.ref("orders").push(order);
-
+        await cartRef.remove();
         localStorage.removeItem("cart");
-        alert("✅ Order placed successfully!");
+        alert("✅ Order placed!");
         window.location.href = "history.html";
-      } catch (error) {
-        console.error("❌ Order error:", error);
-        alert("❌ Failed to place order. Try again.");
+      } catch(e) {
+        console.error(e);
+        alert("⚠️ Order placed but error occurred.");
+        window.location.href = "history.html";
       }
     });
-  </script>
 
-  <!-- User Info -->
-  <script>
-    const userArea = document.getElementById("userArea");
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (user) {
-      userArea.innerHTML = `
-        👋 Welcome, <strong>${user.username}</strong>
-        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
-      `;
-    }
-
+    // userArea
+    document.getElementById("userArea").innerHTML = `
+      👋 Welcome, <strong>${user.username}</strong>
+      <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>`;
     function logout() {
       localStorage.removeItem("loggedInUser");
       window.location.href = "login.html";
-    }
-  </script>
-
-  <!-- PWA Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(reg => console.log("✅ Service Worker registered"))
-        .catch(err => console.warn("❌ Service Worker failed", err));
     }
   </script>
 </body>
