@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Order History - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" type="image/png" />
+  <meta name="theme-color" content="#0d6efd" />
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
@@ -20,60 +23,73 @@
     <div id="orderHistory"></div>
   </div>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
+
   <script>
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const orderHistory = document.getElementById("orderHistory");
+
     if (!user) {
       alert("Please log in to access this page.");
       window.location.href = "login.html";
     }
 
-    const orders = JSON.parse(localStorage.getItem("orderHistory")) || [];
-    const orderHistory = document.getElementById("orderHistory");
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function saveOrders() {
-      localStorage.setItem("orderHistory", JSON.stringify(orders));
-      location.reload();
-    }
+    db.ref("orders").on("value", snapshot => {
+      const data = snapshot.val();
+      orderHistory.innerHTML = "";
 
-    function updateStatus(index, newStatus) {
-      orders[index].status = newStatus;
-      saveOrders();
-    }
-
-    if (orders.length === 0) {
-      orderHistory.innerHTML = "<p>You have no past orders.</p>";
-    } else {
-      orders.forEach((order, i) => {
-        let total = order.items.reduce((sum, item) => sum + item.price, 0);
-        let list = order.items.map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("");
-
-        let status = order.status || "Pending";
-        let statusControl = "";
-
-        if (user.username === "admin") {
-          if (status === "Pending") {
-            statusControl = `<button class="btn btn-sm btn-info me-2" onclick="updateStatus(${i}, 'Shipped')">Mark as Shipped</button>`;
-          } else if (status === "Shipped") {
-            statusControl = `<button class="btn btn-sm btn-success me-2" onclick="updateStatus(${i}, 'Delivered')">Mark as Delivered</button>`;
-          }
+      const userOrders = [];
+      for (const id in data) {
+        const order = data[id];
+        if (order.email === user.email || order.username === user.username) {
+          userOrders.push(order);
         }
+      }
 
-        const card = document.createElement("div");
-        card.className = "card mb-3";
-        card.innerHTML = `
-          <div class="card-body">
-            <h5>Order #${i + 1}</h5>
-            <p><strong>Name:</strong> ${order.name}</p>
-            <p><strong>Phone:</strong> ${order.phone}</p>
-            <p><strong>Address:</strong> ${order.address}</p>
-            <ul>${list}</ul>
-            <p><strong>Total:</strong> ₦${total.toLocaleString()}</p>
-            <p><strong>Status:</strong> ${status}</p>
-            ${statusControl}
-          </div>
-        `;
-        orderHistory.appendChild(card);
-      });
+      if (userOrders.length === 0) {
+        orderHistory.innerHTML = "<p>You have no past orders.</p>";
+      } else {
+        userOrders.sort((a, b) => b.order_id.localeCompare(a.order_id));
+        userOrders.forEach((order, i) => {
+          const list = (order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("");
+          const card = document.createElement("div");
+          card.className = "card mb-3";
+          card.innerHTML = `
+            <div class="card-body">
+              <h5>Order: ${order.order_id}</h5>
+              <p><strong>Name:</strong> ${order.name}</p>
+              <p><strong>Phone:</strong> ${order.phone}</p>
+              <p><strong>Address:</strong> ${order.address}</p>
+              <ul>${list}</ul>
+              <p><strong>Total:</strong> ₦${order.total.toLocaleString()}</p>
+              <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></p>
+            </div>
+          `;
+          orderHistory.appendChild(card);
+        });
+      }
+    });
+
+    function getStatusColor(status) {
+      if (status === "Pending") return "warning";
+      if (status === "Shipped") return "primary";
+      if (status === "Delivered") return "success";
+      return "secondary";
     }
   </script>
 
@@ -91,6 +107,15 @@
       localStorage.removeItem("loggedInUser");
       alert("You have been logged out.");
       window.location.href = "login.html";
+    }
+  </script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log("✅ Service Worker registered"))
+        .catch(err => console.error("❌ SW error:", err));
     }
   </script>
 </body>
