@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mini Jumia</title>
+
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <meta name="theme-color" content="#0d6efd" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .product-card img {
@@ -69,9 +78,9 @@
         image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
       },
-       {
+      {
         id: 5,
-        name: "smart Television",
+        name: "Smart Television",
         price: 950000,
         image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
@@ -160,6 +169,16 @@
       localStorage.removeItem("loggedInUser");
       alert("You have been logged out.");
       window.location.href = "login.html";
+    }
+  </script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .then(reg => console.log("✅ Service Worker registered", reg.scope))
+        .catch(err => console.error("❌ Service Worker registration failed", err));
     }
   </script>
 </body>
