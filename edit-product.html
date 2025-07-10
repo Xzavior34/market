@@ -8,59 +8,84 @@
 </head>
 <body>
   <div class="container mt-4">
-    <h2 class="mb-4">✏️ Edit Products</h2>
-    <div id="productList" class="row"></div>
+    <h2>🛠 Edit & Delete Products</h2>
+    <div id="productList" class="row g-4 mt-3"></div>
   </div>
 
-  <script>
-    const allProducts = JSON.parse(localStorage.getItem("products")) || [];
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    function renderProducts() {
-      const container = document.getElementById("productList");
-      container.innerHTML = "";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
 
-      allProducts.forEach((product, index) => {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const productList = document.getElementById("productList");
+
+    onValue(ref(db, "products"), (snapshot) => {
+      productList.innerHTML = "";
+      const data = snapshot.val();
+      if (!data) {
+        productList.innerHTML = "<p>No products found.</p>";
+        return;
+      }
+
+      for (const id in data) {
+        const product = data[id];
+
         const col = document.createElement("div");
-        col.className = "col-md-4 mb-3";
-
+        col.className = "col-md-4";
         col.innerHTML = `
-          <div class="card">
-            <img src="${product.image}" class="card-img-top" style="height:200px; object-fit:cover;">
+          <div class="card h-100">
+            <img src="${product.image}" class="card-img-top" alt="${product.name}" style="max-height: 200px; object-fit: contain;">
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
-              <p>₦${product.price}</p>
-              <input class="form-control mb-2" type="text" placeholder="New Name" id="name-${index}" />
-              <input class="form-control mb-2" type="number" placeholder="New Price" id="price-${index}" />
-              <button class="btn btn-sm btn-primary" onclick="updateProduct(${index})">Save Changes</button>
-              <button class="btn btn-sm btn-danger mt-1" onclick="deleteProduct(${index})">Delete</button>
+              <p class="card-text">₦${product.price.toLocaleString()}</p>
+              <p class="card-text"><strong>Category:</strong> ${product.category}</p>
+              <p class="card-text">${product.description}</p>
+              <button class="btn btn-sm btn-warning me-2" onclick="editProduct('${id}', '${product.name}', ${product.price}, '${product.image}', '${product.category}', \`${product.description}\`)">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteProduct('${id}')">Delete</button>
             </div>
           </div>
         `;
-        container.appendChild(col);
-      });
-    }
-
-    function updateProduct(index) {
-      const name = document.getElementById(`name-${index}`).value.trim();
-      const price = parseInt(document.getElementById(`price-${index}`).value.trim());
-
-      if (name) allProducts[index].name = name;
-      if (!isNaN(price)) allProducts[index].price = price;
-
-      localStorage.setItem("products", JSON.stringify(allProducts));
-      alert("Product updated!");
-      renderProducts();
-    }
-
-    function deleteProduct(index) {
-      if (confirm("Are you sure you want to delete this product?")) {
-        allProducts.splice(index, 1);
-        localStorage.setItem("products", JSON.stringify(allProducts));
-        renderProducts();
+        productList.appendChild(col);
       }
-    }
+    });
 
-    renderProducts();
+    window.editProduct = (id, name, price, image, category, description) => {
+      const newName = prompt("Edit Product Name:", name);
+      const newPrice = prompt("Edit Price:", price);
+      const newImage = prompt("Edit Image URL:", image);
+      const newCategory = prompt("Edit Category:", category);
+      const newDesc = prompt("Edit Description:", description);
+
+      if (newName && newPrice && newImage && newCategory && newDesc) {
+        update(ref(db, `products/${id}`), {
+          name: newName,
+          price: parseFloat(newPrice),
+          image: newImage,
+          category: newCategory,
+          description: newDesc
+        }).then(() => alert("✅ Product updated!"))
+          .catch(err => alert("❌ Failed to update product."));
+      }
+    };
+
+    window.deleteProduct = (id) => {
+      if (confirm("Are you sure you want to delete this product?")) {
+        remove(ref(db, `products/${id}`))
+          .then(() => alert("🗑 Product deleted"))
+          .catch(err => alert("❌ Failed to delete product"));
+      }
+    };
   </script>
 </body>
 </html>
