@@ -1,13 +1,19 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mini Jumia</title>  <!-- PWA -->  <link rel="manifest" href="manifest.json">
+  <title>Mini Jumia</title>
+
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
   <meta name="theme-color" content="#0d6efd" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="icon-192.png">  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .product-card img {
       height: 200px;
@@ -16,26 +22,32 @@
   </style>
 </head>
 <body>
-  <div id="userArea" class="text-end p-2"></div>  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div id="userArea" class="text-end p-2"></div>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🛍 Mini Jumia</a><form class="d-flex ms-auto me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
-    <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
-  </form>
+      <a class="navbar-brand" href="#">🛍 Mini Jumia</a>
 
-  <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
-    <option value="">All Categories</option>
-  </select>
+      <form class="d-flex ms-auto me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
+        <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
+      </form>
 
-  <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
-  <a id="viewOrderBtn" class="btn btn-warning me-2 d-none" href="history.html">📜 View Orders</a>
-  <a id="uploadBtn" class="btn btn-success me-2 d-none" href="upload.html">⬆️ Upload</a>
-</div>
+      <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
+        <option value="">All Categories</option>
+      </select>
 
-  </nav>  <div class="container mt-4">
-    <div class="row" id="productList">
-      <!-- Products will be inserted here -->
+      <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
+      <a id="viewOrderBtn" class="btn btn-warning me-2 d-none" href="history.html">📜 View Orders</a>
+      <a id="uploadBtn" class="btn btn-success me-2 d-none" href="upload.html">⬆️ Upload</a>
     </div>
-  </div>  <!-- Firebase SDK -->  <script type="module">
+  </nav>
+
+  <div class="container mt-4">
+    <div class="row" id="productList"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
@@ -57,35 +69,35 @@
         id: 1,
         name: "Wireless Earbuds",
         price: 7500,
-        image: "https://images.unsplash.com/photo-1606813909184-589d7c46f5ef?auto=format&fit=crop&w=600&q=80",
+        image: "https://images.unsplash.com/photo-1581260032066-e3b4f80b20b1?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
       },
       {
         id: 2,
         name: "Smartphone",
         price: 45000,
-        image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52bc?auto=format&fit=crop&w=600&q=80",
+        image: "https://images.unsplash.com/photo-1510557880182-3f8f5f67f1e9?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
       },
       {
         id: 3,
         name: "Sneakers",
         price: 12000,
-        image: "https://images.unsplash.com/photo-1600185365089-07b3c4bc9624?auto=format&fit=crop&w=600&q=80",
+        image: "https://images.unsplash.com/photo-1583337130417-3346a1c1026e?auto=format&fit=crop&w=600&q=80",
         category: "Fashion"
       },
       {
         id: 4,
         name: "Bluetooth Speaker",
         price: 9500,
-        image: "https://images.unsplash.com/photo-1612336307427-51c70ffce70d?auto=format&fit=crop&w=600&q=80",
+        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
       },
       {
         id: 5,
         name: "Smart Television",
         price: 950000,
-        image: "https://images.unsplash.com/photo-1571847144126-04c5a0d8264c?auto=format&fit=crop&w=600&q=80",
+        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
         category: "Electronics"
       }
     ];
@@ -94,36 +106,42 @@
     const categoryFilter = document.getElementById("categoryFilter");
     let allProducts = [...defaultProducts];
 
-    // Load products from Firebase
     onValue(ref(db, "products"), (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const firebaseProducts = Object.values(data);
         allProducts = [...defaultProducts, ...firebaseProducts];
       }
-
       populateCategories();
       renderProducts(allProducts);
     });
 
-    function renderProducts(productsToShow) {
+    function renderProducts(products) {
       productList.innerHTML = "";
-      productsToShow.forEach(product => {
+      products.forEach(product => {
         const col = document.createElement("div");
         col.className = "col-md-3 mb-4";
         col.innerHTML = `
-          <div class="card product-card">
-            <img src="${product.image}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
-            <div class="card-body">
+          <div class="card product-card h-100">
+            <img src="${product.image}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <div class="card-body d-flex flex-column">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary w-100" onclick="addToCart(${product.id})">Add to Cart</button>
+              <button class="btn btn-primary mt-auto w-100" onclick="addToCart(${encodeURIComponent(JSON.stringify(product))})">Add to Cart</button>
             </div>
           </div>
         `;
         productList.appendChild(col);
       });
     }
+
+    window.addToCart = function (productStr) {
+      const product = JSON.parse(decodeURIComponent(productStr));
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push(product);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert(`${product.name} added to cart!`);
+    };
 
     function populateCategories() {
       const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
@@ -144,15 +162,10 @@
       );
       renderProducts(filtered);
     };
+  </script>
 
-    window.addToCart = function(productId) {
-      const product = allProducts.find(p => p.id === productId);
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      alert(`${product.name} added to cart!`);
-    }
-  </script>  <script>
+  <!-- User and PWA -->
+  <script>
     const userArea = document.getElementById("userArea");
     const viewOrderBtn = document.getElementById("viewOrderBtn");
     const uploadBtn = document.getElementById("uploadBtn");
@@ -164,7 +177,6 @@
         <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
       `;
       viewOrderBtn.classList.remove("d-none");
-
       if (user.username === "admin") {
         uploadBtn.classList.remove("d-none");
       }
@@ -175,11 +187,13 @@
       alert("You have been logged out.");
       window.location.href = "login.html";
     }
-  </script>  <!-- PWA Service Worker -->  <script>
+
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
+      navigator.serviceWorker
+        .register("service-worker.js")
         .then(reg => console.log("✅ Service Worker registered:", reg.scope))
-        .catch(err => console.error("❌ SW registration failed:", err));
+        .catch(err => console.error("❌ Service Worker registration failed:", err));
     }
-  </script></body>
+  </script>
+</body>
 </html>
