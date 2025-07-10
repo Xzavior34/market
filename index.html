@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mini Jumia</title>
 
-  <!-- PWA Support -->
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
   <meta name="theme-color" content="#0d6efd" />
@@ -48,7 +48,24 @@
     </div>
   </div>
 
-  <script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const defaultProducts = [
       {
         id: 1,
@@ -87,10 +104,21 @@
       }
     ];
 
-    const uploadedProducts = JSON.parse(localStorage.getItem("products")) || [];
-    const allProducts = [...defaultProducts, ...uploadedProducts];
     const productList = document.getElementById("productList");
     const categoryFilter = document.getElementById("categoryFilter");
+    let allProducts = [...defaultProducts];
+
+    // Load products from Firebase
+    onValue(ref(db, "products"), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const firebaseProducts = Object.values(data);
+        allProducts = [...defaultProducts, ...firebaseProducts];
+      }
+
+      populateCategories();
+      renderProducts(allProducts);
+    });
 
     function renderProducts(productsToShow) {
       productList.innerHTML = "";
@@ -103,7 +131,7 @@
             <div class="card-body">
               <h5 class="card-title">${product.name}</h5>
               <p class="card-text">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary w-100" onclick="addToCart(${product.id})">Add to Cart</button>
+              <a href="product.html?id=${product.id}" class="btn btn-primary w-100">View Details</a>
             </div>
           </div>
         `;
@@ -111,16 +139,9 @@
       });
     }
 
-    function addToCart(productId) {
-      const product = allProducts.find(p => p.id === productId);
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      alert(`${product.name} added to cart!`);
-    }
-
     function populateCategories() {
       const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
+      categoryFilter.innerHTML = `<option value="">All Categories</option>`;
       categories.forEach(cat => {
         const option = document.createElement("option");
         option.value = cat;
@@ -129,22 +150,14 @@
       });
     }
 
-    function filterProducts() {
+    window.filterProducts = function () {
       const search = document.getElementById("searchInput").value.toLowerCase();
       const category = categoryFilter.value;
-
-      const filtered = allProducts.filter(p => {
-        const matchName = p.name.toLowerCase().includes(search);
-        const matchCategory = category ? p.category === category : true;
-        return matchName && matchCategory;
-      });
-
+      const filtered = allProducts.filter(p =>
+        p.name.toLowerCase().includes(search) && (!category || p.category === category)
+      );
       renderProducts(filtered);
-    }
-
-    // Initialize
-    populateCategories();
-    renderProducts(allProducts);
+    };
   </script>
 
   <script>
@@ -172,14 +185,13 @@
     }
   </script>
 
-  <!-- Register Service Worker -->
+  <!-- PWA Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("service-worker.js")
-        .then(reg => console.log("✅ Service Worker registered", reg.scope))
-        .catch(err => console.error("❌ Service Worker registration failed", err));
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("✅ Service Worker registered:", reg.scope))
+        .catch(err => console.error("❌ SW registration failed:", err));
     }
   </script>
 </body>
-</html>
+  </html>
