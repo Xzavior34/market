@@ -3,24 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Product Details - Mini Jumia</title>
+  <title>Product Details</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" type="image/png" />
-  <meta name="theme-color" content="#0d6efd" />
 </head>
 <body>
   <div class="container mt-4">
     <a href="index.html" class="btn btn-secondary mb-3">⬅ Back to Shop</a>
-    <div id="productDetail" class="card p-3 shadow-sm"></div>
+    <div id="productDetail" class="card p-3 shadow-sm">
+      <!-- Product details will appear here -->
+    </div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-  <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -30,39 +34,31 @@
       messagingSenderId: "641009946484",
       appId: "1:641009946484:web:23a692390add3827802621"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get("id");
+    const productId = parseInt(urlParams.get("id"));
+
     const productDetail = document.getElementById("productDetail");
 
-    // Try Firebase first
-    firebase.database().ref("products").on("value", snapshot => {
+    // Fallback product list (optional)
+    const defaultProducts = [
+      { id: 1, name: "Wireless Earbuds", price: 7500, image: "https://via.placeholder.com/300x200?text=Earbuds", category: "Electronics" },
+      { id: 2, name: "Smartphone", price: 45000, image: "https://via.placeholder.com/300x200?text=Phone", category: "Electronics" },
+      { id: 3, name: "Sneakers", price: 12000, image: "https://via.placeholder.com/300x200?text=Sneakers", category: "Fashion" },
+      { id: 4, name: "Bluetooth Speaker", price: 9500, image: "https://via.placeholder.com/300x200?text=Speaker", category: "Electronics" }
+    ];
+
+    onValue(ref(db, "products"), (snapshot) => {
       const data = snapshot.val();
-      let product = null;
-
+      let products = [...defaultProducts];
       if (data) {
-        for (const key in data) {
-          if (data[key].id == productId || key === productId) {
-            product = data[key];
-            break;
-          }
-        }
+        products = products.concat(Object.values(data));
       }
 
-      // If not in Firebase, try localStorage + default
-      if (!product) {
-        const defaultProducts = [
-          { id: 1, name: "Wireless Earbuds", price: 7500, image: "https://via.placeholder.com/300x200?text=Earbuds", category: "Electronics" },
-          { id: 2, name: "Smartphone", price: 45000, image: "https://via.placeholder.com/300x200?text=Phone", category: "Electronics" },
-          { id: 3, name: "Sneakers", price: 12000, image: "https://via.placeholder.com/300x200?text=Sneakers", category: "Fashion" },
-          { id: 4, name: "Bluetooth Speaker", price: 9500, image: "https://via.placeholder.com/300x200?text=Speaker", category: "Electronics" }
-        ];
-        const localProducts = JSON.parse(localStorage.getItem("products")) || [];
-        const allProducts = [...defaultProducts, ...localProducts];
-        product = allProducts.find(p => p.id == productId);
-      }
+      const product = products.find(p => p.id === productId);
 
       if (product) {
         productDetail.innerHTML = `
@@ -74,29 +70,29 @@
               <h2>${product.name}</h2>
               <p><strong>Category:</strong> ${product.category || "Uncategorized"}</p>
               <p><strong>Price:</strong> ₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-success" onclick='addToCart(${JSON.stringify(product)})'>Add to Cart</button>
+              <button class="btn btn-success" onclick="addToCart(${product.id})">Add to Cart</button>
             </div>
           </div>
         `;
       } else {
-        productDetail.innerHTML = "<h4>❌ Product not found.</h4>";
+        productDetail.innerHTML = "<h3>Product not found!</h3>";
       }
     });
 
-    function addToCart(product) {
+    window.addToCart = function (id) {
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      alert(`${product.name} added to cart!`);
-    }
-  </script>
+      onValue(ref(db, "products"), (snapshot) => {
+        const products = snapshot.val();
+        if (!products) return;
 
-  <!-- Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("SW error:", err));
+        const allProducts = Object.values(products);
+        const product = allProducts.find(p => p.id === id);
+        if (product) {
+          cart.push(product);
+          localStorage.setItem("cart", JSON.stringify(cart));
+          alert(`${product.name} added to cart!`);
+        }
+      }, { onlyOnce: true });
     }
   </script>
 </body>
