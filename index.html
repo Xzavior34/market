@@ -19,26 +19,45 @@
       height: 200px;
       object-fit: cover;
     }
+
+    @media (max-width: 768px) {
+      .navbar .form-control {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      .navbar .btn, .navbar .form-select {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      .navbar .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="userArea" class="text-end p-2"></div>
+  <div id="userArea" class="text-end p-2 small"></div>
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">🛍 Mini Jumia</a>
+    <div class="container-fluid flex-wrap">
+      <a class="navbar-brand me-auto" href="#">🛍 Mini Jumia</a>
 
-      <form class="d-flex ms-auto me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
+      <form class="d-flex me-2" role="search" onsubmit="event.preventDefault(); filterProducts();">
         <input class="form-control me-2" type="search" id="searchInput" placeholder="Search products">
       </form>
 
-      <select id="categoryFilter" class="form-select w-auto me-3" onchange="filterProducts()">
+      <select id="categoryFilter" class="form-select w-auto me-2" onchange="filterProducts()">
         <option value="">All Categories</option>
       </select>
 
-      <a class="btn btn-light me-2" href="cart.html">🛒 Cart</a>
-      <a id="viewOrderBtn" class="btn btn-warning me-2 d-none" href="history.html">📜 View Orders</a>
-      <a id="uploadBtn" class="btn btn-success me-2 d-none" href="upload.html">⬆️ Upload</a>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <a class="btn btn-light" href="cart.html">🛒 Cart</a>
+        <a id="viewOrderBtn" class="btn btn-warning d-none" href="history.html">📜 View Orders</a>
+        <a id="uploadBtn" class="btn btn-success d-none" href="upload.html">⬆️ Upload</a>
+      </div>
     </div>
   </nav>
 
@@ -46,7 +65,7 @@
     <div class="row" id="productList"></div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
@@ -64,70 +83,34 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const defaultProducts = [
-      {
-        id: 1,
-        name: "Wireless Earbuds",
-        price: 7500,
-        image: "https://images.unsplash.com/photo-1581260032066-e3b4f80b20b1?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 2,
-        name: "Smartphone",
-        price: 45000,
-        image: "https://images.unsplash.com/photo-1510557880182-3f8f5f67f1e9?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 3,
-        name: "Sneakers",
-        price: 12000,
-        image: "https://images.unsplash.com/photo-1583337130417-3346a1c1026e?auto=format&fit=crop&w=600&q=80",
-        category: "Fashion"
-      },
-      {
-        id: 4,
-        name: "Bluetooth Speaker",
-        price: 9500,
-        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      },
-      {
-        id: 5,
-        name: "Smart Television",
-        price: 950000,
-        image: "https://images.unsplash.com/photo-1580894732444-16f54e6a2f2c?auto=format&fit=crop&w=600&q=80",
-        category: "Electronics"
-      }
-    ];
-
     const productList = document.getElementById("productList");
     const categoryFilter = document.getElementById("categoryFilter");
-    let allProducts = [...defaultProducts];
+    let allProducts = [];
 
     onValue(ref(db, "products"), (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        const firebaseProducts = Object.values(data);
-        allProducts = [...defaultProducts, ...firebaseProducts];
-      }
+      allProducts = data ? Object.values(data) : [];
       populateCategories();
       renderProducts(allProducts);
     });
 
     function renderProducts(products) {
       productList.innerHTML = "";
-      products.forEach(product => {
+      if (products.length === 0) {
+        productList.innerHTML = `<p class="text-center text-muted">No products found.</p>`;
+        return;
+      }
+
+      products.forEach((product, index) => {
         const col = document.createElement("div");
-        col.className = "col-md-3 mb-4";
+        col.className = "col-sm-6 col-md-4 col-lg-3 mb-4";
         col.innerHTML = `
           <div class="card product-card h-100">
             <img src="${product.image}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
             <div class="card-body d-flex flex-column">
               <h5 class="card-title">${product.name}</h5>
-              <p class="card-text">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary mt-auto w-100" onclick="addToCart(${encodeURIComponent(JSON.stringify(product))})">Add to Cart</button>
+              <p class="card-text fw-bold text-success">₦${product.price?.toLocaleString()}</p>
+              <button class="btn btn-primary mt-auto w-100" onclick='addToCart(${JSON.stringify(product)})'>Add to Cart</button>
             </div>
           </div>
         `;
@@ -135,8 +118,7 @@
       });
     }
 
-    window.addToCart = function (productStr) {
-      const product = JSON.parse(decodeURIComponent(productStr));
+    window.addToCart = function (product) {
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
       cart.push(product);
       localStorage.setItem("cart", JSON.stringify(cart));
@@ -164,7 +146,7 @@
     };
   </script>
 
-  <!-- User and PWA -->
+  <!-- User Info & PWA -->
   <script>
     const userArea = document.getElementById("userArea");
     const viewOrderBtn = document.getElementById("viewOrderBtn");
@@ -174,7 +156,7 @@
     if (user) {
       userArea.innerHTML = `
         👋 Welcome, <strong>${user.username}</strong>
-        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
+        <button class="btn btn-sm btn-outline-light ms-2" onclick="logout()">Logout</button>
       `;
       viewOrderBtn.classList.remove("d-none");
       if (user.username === "admin") {
