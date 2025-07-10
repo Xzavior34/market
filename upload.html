@@ -3,68 +3,83 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Upload Product</title>
+  <title>Upload Product - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-  <div class="container mt-5">
-    <h2>📤 Upload Product</h2>
+  <div class="container mt-4">
+    <h2>📤 Upload New Product</h2>
     <form id="uploadForm">
       <div class="mb-3">
-        <label class="form-label">Product Name</label>
-        <input type="text" id="productName" class="form-control" required />
+        <label for="name" class="form-label">Product Name</label>
+        <input type="text" id="name" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label class="form-label">Price (₦)</label>
-        <input type="number" id="productPrice" class="form-control" required />
+        <label for="price" class="form-label">Price (₦)</label>
+        <input type="number" id="price" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label class="form-label">Category</label>
-        <input type="text" id="productCategory" class="form-control" />
+        <label for="image" class="form-label">Image URL</label>
+        <input type="url" id="image" class="form-control" required />
       </div>
-      <button type="submit" class="btn btn-primary">Add Product</button>
+      <div class="mb-3">
+        <label for="category" class="form-label">Category</label>
+        <input type="text" id="category" class="form-control" placeholder="e.g. Electronics, Fashion" required />
+      </div>
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" class="form-control" rows="4" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Upload Product</button>
     </form>
   </div>
 
-  <script>
-    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const form = document.getElementById("uploadForm");
+
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const name = document.getElementById("productName").value.trim();
-      const price = parseFloat(document.getElementById("productPrice").value);
-      const category = document.getElementById("productCategory").value.trim();
-
-      if (!name || !price) {
-        alert("Please fill all required fields.");
-        return;
-      }
-
-      // Fetch image from Unsplash based on product name
-      const unsplashURL = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(name)}&client_id=R97JRSXzu1Nsa4G6HQAmzL_JIFx4ogRkP2524fGGV3g`;
-      let imageURL = "";
-
-      try {
-        const res = await fetch(unsplashURL);
-        const data = await res.json();
-        imageURL = data.results?.[0]?.urls?.regular || "https://via.placeholder.com/300x200?text=No+Image";
-      } catch (error) {
-        imageURL = "https://via.placeholder.com/300x200?text=Image+Error";
-      }
+      const name = document.getElementById("name").value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      const image = document.getElementById("image").value.trim();
+      const category = document.getElementById("category").value.trim();
+      const description = document.getElementById("description").value.trim();
 
       const newProduct = {
-        id: Date.now(),
         name,
         price,
-        image: imageURL,
-        category
+        image,
+        category,
+        description,
+        createdAt: Date.now()
       };
 
-      const products = JSON.parse(localStorage.getItem("products")) || [];
-      products.push(newProduct);
-      localStorage.setItem("products", JSON.stringify(products));
-
-      alert("✅ Product uploaded successfully!");
-      this.reset();
+      push(ref(db, "products"), newProduct)
+        .then(() => {
+          alert("✅ Product uploaded successfully!");
+          form.reset();
+        })
+        .catch((err) => {
+          console.error("❌ Upload failed:", err);
+          alert("Failed to upload product.");
+        });
     });
   </script>
 </body>
