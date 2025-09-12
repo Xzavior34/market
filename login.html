@@ -30,9 +30,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -47,13 +46,6 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Ensure admin exists in localStorage
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    if (!users.some(u => u.username === "admin")) {
-      users.push({ username: "admin", email: "admin@mini.com", password: "admin123", role: "admin" });
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-
     // Login form handler
     document.getElementById("loginForm").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -66,9 +58,9 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
 
-        // Find role from localStorage
-        const localUser = users.find(u => u.email === email);
-        const role = localUser?.role || "user";
+        // Check role in database
+        const snapshot = await get(child(ref(db), `users/${firebaseUser.uid}`));
+        const role = snapshot.exists() ? snapshot.val().role : "user";
 
         // Save session to Firebase Database
         await push(ref(db, "sessions"), {
@@ -78,8 +70,8 @@
           loginTime: new Date().toISOString()
         });
 
-        // Save logged-in user in localStorage
-        localStorage.setItem("loggedInUser", JSON.stringify({ email: email, role: role }));
+        // Save logged-in user locally
+        localStorage.setItem("loggedInUser", JSON.stringify({ email, role }));
 
         alert("✅ Login successful!");
 
@@ -100,7 +92,7 @@
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js")
         .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("Service Worker registration failed:", err));
+        .catch(err => console.error("❌ Service Worker registration failed:", err));
     }
   </script>
 </body>
