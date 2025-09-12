@@ -1,201 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mini Jumia</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  .product-card img { height:200px; object-fit:cover; transition: transform 0.3s ease; }
-  .product-card:hover img { transform: scale(1.05); }
-  .product-card { opacity:0; transform:translateY(20px); animation: fadeSlideUp 0.6s ease forwards; }
-  @keyframes fadeSlideUp { to { opacity:1; transform:translateY(0); } }
-  .product-card:hover { box-shadow:0 8px 16px rgba(0,0,0,0.15); transition:box-shadow 0.3s ease; }
-  .btn-animate { animation: popButton 0.2s ease; }
-  @keyframes popButton { 0% {scale:1} 50%{scale:0.95} 100%{scale:1} }
-  #spinner{text-align:center;margin-top:40px;}
-  .topNavActions{background:#f8f9fa;border-bottom:1px solid #ccc;}
-  .topNavActions a{flex:1;text-align:center;padding:12px 0;text-decoration:none;color:#000;font-size:14px;}
-  .topNavActions a:hover{background:#e9ecef;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Jumia</title>
+
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <meta name="theme-color" content="#0d6efd" />
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    .product-card img { height: 200px; object-fit: cover; transition: transform 0.3s ease; }
+    .product-card:hover img { transform: scale(1.05); }
+    .product-card { opacity: 0; transform: translateY(20px); animation: fadeSlideUp 0.6s ease forwards; }
+    @keyframes fadeSlideUp { to { opacity: 1; transform: translateY(0); } }
+    .product-card:hover { box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: box-shadow 0.3s ease; }
+    .btn-animate { animation: popButton 0.2s ease; }
+    @keyframes popButton { 0% { transform: scale(1); } 50% { transform: scale(0.95); } 100% { transform: scale(1); } }
+    #spinner { text-align: center; margin-top: 40px; }
+    .topNavActions { background: #f8f9fa; border-bottom: 1px solid #ccc; }
+    .topNavActions a { flex: 1; text-align: center; padding: 12px 0; text-decoration: none; color: #000; font-size: 14px; }
+    .topNavActions a:hover { background: #e9ecef; }
+  </style>
 </head>
 <body>
 
-<div id="userArea" class="text-end p-2 small"></div>
+  <div id="userArea" class="text-end p-2 small"></div>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container-fluid"><a class="navbar-brand" href="#">🛍 Mini Jumia</a></div>
-</nav>
-
-<div class="d-flex justify-content-around topNavActions">
-  <a href="index.html">🏠<br><small>Home</small></a>
-  <a href="cart.html">🛒<br><small>Cart <span id="cartCount" class="badge bg-danger">0</span></small></a>
-  <a href="history.html">📜<br><small>Orders</small></a>
-  <a href="#" id="loginBtn">👤<br><small id="loginText">Login</small></a>
-</div>
-
-<div class="container mt-3">
-  <div class="row g-2 align-items-center">
-    <div class="col-md-6">
-      <form class="d-flex" role="search" onsubmit="event.preventDefault(); filterProducts();">
-        <input class="form-control" id="searchInput" placeholder="Search products">
-      </form>
+  <!-- TOP NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🛍 Mini Jumia</a>
     </div>
-    <div class="col-md-6">
-      <select id="categoryFilter" class="form-select" onchange="filterProducts()">
-        <option value="">All Categories</option>
-      </select>
-    </div>
+  </nav>
+
+  <!-- TOP NAV ACTION BUTTONS -->
+  <div class="d-flex justify-content-around topNavActions">
+    <a href="index.html">🏠<br><small>Home</small></a>
+    <a href="cart.html">🛒<br><small>Cart <span id="cartCount" class="badge bg-danger">0</span></small></a>
+    <a href="history.html">📜<br><small>Orders</small></a>
+    <a href="#" id="loginBtn">👤<br><small id="loginText">Login</small></a>
   </div>
-</div>
 
-<div class="container mt-3">
-  <div id="spinner">
-    <div class="spinner-border text-primary" role="status"></div>
-    <p class="mt-2">Loading products...</p>
-  </div>
-  <div class="row" id="productList"></div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-  authDomain: "mini-jumia-42773.firebaseapp.com",
-  databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-  projectId: "mini-jumia-42773",
-  storageBucket: "mini-jumia-42773.appspot.com",
-  messagingSenderId: "641009946484",
-  appId: "1:641009946484:web:23a692390add3827802621"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const productList = document.getElementById("productList");
-const categoryFilter = document.getElementById("categoryFilter");
-const spinner = document.getElementById("spinner");
-let allProducts = [];
-let displayedProducts = 0;
-const batchSize = 8;
-
-spinner.style.display = "block";
-
-onValue(ref(db, "products"), snapshot => {
-  spinner.style.display = "none";
-  const data = snapshot.val();
-  allProducts = data ? Object.values(data) : [];
-  populateCategories();
-  renderProducts(allProducts.slice(0,batchSize));
-  displayedProducts = batchSize;
-  updateCartCount();
-});
-
-function renderProducts(products){
-  products.forEach((product,index)=>{
-    const imgSrc = product.image || product.imageURL || 'https://via.placeholder.com/300x200?text=No+Image';
-    const col = document.createElement("div");
-    col.className = "col-md-3 mb-4";
-    col.innerHTML = `
-      <div class="card product-card h-100" style="animation-delay:${index*0.1}s">
-        <img src="${imgSrc}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${product.name}</h5>
-          <p class="card-text">₦${product.price.toLocaleString()}</p>
-          <button class="btn btn-primary mt-auto w-100" onclick='addToCart(this, ${JSON.stringify(product).replace(/'/g,"&apos;")})'>Add to Cart</button>
-        </div>
+  <!-- SEARCH + CATEGORY FILTER SECTION -->
+  <div class="container mt-3">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-6">
+        <form class="d-flex" role="search" onsubmit="event.preventDefault(); filterProducts();">
+          <input class="form-control" type="search" id="searchInput" placeholder="Search products">
+        </form>
       </div>
-    `;
-    productList.appendChild(col);
-  });
-}
+      <div class="col-md-6">
+        <select id="categoryFilter" class="form-select" onchange="filterProducts()">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-window.addToCart=(btn,product)=>{
-  const cart=JSON.parse(localStorage.getItem("cart"))||[];
-  cart.push(product);
-  localStorage.setItem("cart",JSON.stringify(cart));
-  updateCartCount();
-  btn.classList.add("btn-animate");
-  setTimeout(()=>btn.classList.remove("btn-animate"),200);
-  alert(`${product.name} added to cart!`);
-}
+  <!-- PRODUCT LIST -->
+  <div class="container mt-3">
+    <div id="spinner">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2">Loading products...</p>
+    </div>
+    <div class="row" id="productList"></div>
+  </div>
 
-function updateCartCount(){
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
-  document.getElementById("cartCount").textContent = cart.length;
-}
+  <!-- FIREBASE + PRODUCT FETCHING -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-function populateCategories(){
-  const categories=new Set(allProducts.map(p=>p.category).filter(Boolean));
-  categoryFilter.innerHTML=`<option value="">All Categories</option>`;
-  categories.forEach(cat=>{
-    const option=document.createElement("option");
-    option.value=cat;
-    option.textContent=cat;
-    categoryFilter.appendChild(option);
-  });
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
 
-window.filterProducts=function(){
-  const search=document.getElementById("searchInput").value.toLowerCase();
-  const category=categoryFilter.value;
-  const filtered=allProducts.filter(p=>
-    p.name.toLowerCase().includes(search)&&(!category||p.category===category)
-  );
-  productList.innerHTML="";
-  displayedProducts=batchSize;
-  renderProducts(filtered.slice(0,batchSize));
-}
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-window.addEventListener("scroll",()=>{
-  const scrollPosition=window.innerHeight+window.scrollY;
-  const threshold=document.body.offsetHeight-500;
-  if(scrollPosition>=threshold){
-    const search=document.getElementById("searchInput").value.toLowerCase();
-    const category=categoryFilter.value;
-    const filtered=allProducts.filter(p=>
-      p.name.toLowerCase().includes(search)&&(!category||p.category===category)
-    );
-    const nextBatch=filtered.slice(displayedProducts,displayedProducts+batchSize);
-    renderProducts(nextBatch);
-    displayedProducts+=batchSize;
-  }
-});
-</script>
+    const productList = document.getElementById("productList");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const spinner = document.getElementById("spinner");
+    let allProducts = [];
+    let displayedProducts = 0;
+    const batchSize = 8;
 
-<script>
-const userArea=document.getElementById("userArea");
-const loginBtn=document.getElementById("loginBtn");
-const loginText=document.getElementById("loginText");
-const user=JSON.parse(localStorage.getItem("loggedInUser"));
+    async function fetchProducts() {
+      spinner.style.display = "block";
+      try {
+        const snapshot = await get(child(ref(db), "products"));
+        const data = snapshot.exists() ? snapshot.val() : {};
+        allProducts = Object.values(data);
+        spinner.style.display = "none";
 
-if(user){
-  userArea.innerHTML=`👋 Welcome, <strong>${user.name} ${user.surname}</strong>
-  <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
-  `;
-  loginText.textContent = "Already Logged In";
-  loginBtn.href = "#";
-  loginBtn.onclick = () => alert("You're already logged in.");
-} else {
-  loginText.textContent = "Login";
-  loginBtn.href = "login.html";
-}
+        if (allProducts.length === 0) {
+          productList.innerHTML = `<p class="text-center">No products available.</p>`;
+          return;
+        }
 
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  alert("You have been logged out.");
-  window.location.href = "login.html";
-}
+        populateCategories();
+        renderProducts(allProducts.slice(0, batchSize));
+        displayedProducts = batchSize;
+        updateCartCount();
+      } catch (error) {
+        console.error("❌ Error fetching products:", error);
+        spinner.innerHTML = `<p class="text-center text-danger">Failed to load products. Try refreshing.</p>`;
+      }
+    }
 
-// Register service worker for PWA
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("service-worker.js")
-    .then(reg => console.log("✅ Service Worker registered:", reg.scope))
-    .catch(err => console.error("❌ Service Worker registration failed:", err));
-}
-</script>
+    function renderProducts(products) {
+      products.forEach((product, index) => {
+        const col = document.createElement("div");
+        col.className = "col-md-3 mb-4";
+        col.innerHTML = `
+          <div class="card product-card h-100" style="animation-delay:${index * 0.1}s">
+            <img src="${product.image || 'https://via.placeholder.com/300x200?text=No+Image'}" 
+                 class="card-img-top" alt="${product.name}" 
+                 onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">${product.name}</h5>
+              <p class="card-text">₦${product.price.toLocaleString()}</p>
+              <button class="btn btn-primary mt-auto w-100" 
+                      onclick='addToCart(this, ${JSON.stringify(product).replace(/'/g, "&apos;")})'>
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        `;
+        productList.appendChild(col);
+      });
+    }
+
+    window.addToCart = function (btn, product) {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push(product);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+      btn.classList.add("btn-animate");
+      setTimeout(() => btn.classList.remove("btn-animate"), 200);
+      alert(`${product.name} added to cart!`);
+    };
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      document.getElementById("cartCount").textContent = cart.length;
+    }
+
+    function populateCategories() {
+      const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
+      categoryFilter.innerHTML = `<option value="">All Categories</option>`;
+      categories.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categoryFilter.appendChild(option);
+      });
+    }
+
+    window.filterProducts = function () {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const category = categoryFilter.value;
+      const filtered = allProducts.filter(p =>
+        p.name.toLowerCase().includes(search) && (!category || p.category === category)
+      );
+      productList.innerHTML = "";
+      displayedProducts = batchSize;
+      renderProducts(filtered.slice(0, batchSize));
+    };
+
+    // Infinite scroll
+    window.addEventListener("scroll", () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 500;
+      if (scrollPosition >= threshold) {
+        const search = document.getElementById("searchInput").value.toLowerCase();
+        const category = categoryFilter.value;
+        const filtered = allProducts.filter(p =>
+          p.name.toLowerCase().includes(search) && (!category || p.category === category)
+        );
+        const nextBatch = filtered.slice(displayedProducts, displayedProducts + batchSize);
+        renderProducts(nextBatch);
+        displayedProducts += batchSize;
+      }
+    });
+
+    fetchProducts();
+  </script>
+
+  <!-- USER LOGIN DISPLAY + LOGOUT -->
+  <script>
+    const userArea = document.getElementById("userArea");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginText = document.getElementById("loginText");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    if (user) {
+      userArea.innerHTML = `
+        👋 Welcome, <strong>${user.name}</strong>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
+      `;
+      loginBtn.style.display = "none"; // Hide login button
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      alert("You have been logged out.");
+      window.location.href = "login.html";
+    }
+
+    if ("serviceWorker" in navigator)
+      function logout() {
+      localStorage.removeItem("loggedInUser");
+      alert("You have been logged out.");
+      window.location.href = "login.html";
+    }
+
+    // Register Service Worker for PWA
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .then(reg => console.log("✅ Service Worker registered:", reg.scope))
+        .catch(err => console.error("❌ Service Worker registration failed:", err));
+    }
+  </script>
 </body>
 </html>
