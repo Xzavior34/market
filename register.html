@@ -14,30 +14,31 @@
     <h2>Create Account</h2>
     <form id="registerForm">
       <div class="mb-3">
-        <label for="username" class="form-label">Email or Username</label>
-        <input type="text" id="username" class="form-control" required />
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" placeholder="you@example.com" required />
       </div>
       <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" required />
+        <input type="password" id="password" class="form-control" placeholder="Password" required />
       </div>
       <div class="mb-3">
         <label for="name" class="form-label">Name</label>
-        <input type="text" id="name" class="form-control" required />
+        <input type="text" id="name" class="form-control" placeholder="John" required />
       </div>
       <div class="mb-3">
         <label for="surname" class="form-label">Surname</label>
-        <input type="text" id="surname" class="form-control" required />
+        <input type="text" id="surname" class="form-control" placeholder="Doe" required />
       </div>
       <button type="submit" class="btn btn-primary">Register</button>
       <p class="mt-3">Already have an account? <a href="login.html">Login</a></p>
     </form>
   </div>
 
-  <!-- Firebase + Registration Logic -->
+  <!-- Firebase Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
@@ -50,43 +51,45 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
     document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
       const name = document.getElementById("name").value.trim();
       const surname = document.getElementById("surname").value.trim();
 
-      if (!username || !password || !name || !surname) {
+      if (!email || !password || !name || !surname) {
         return alert("⚠️ Please fill in all fields.");
       }
 
-      // Check if user already exists
-      const snapshot = await get(child(ref(db), `users/${username.replace(/\W/g, "_")}`));
-      if (snapshot.exists()) {
-        return alert("❌ Username already exists.");
+      try {
+        // Create user with Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save additional user info in Realtime Database
+        await set(ref(db, `users/${user.uid}`), {
+          email: email,
+          name: name,
+          surname: surname,
+          role: "user",
+          createdAt: new Date().toISOString()
+        });
+
+        alert("✅ Registration successful! Please log in.");
+        window.location.href = "login.html";
+
+      } catch (error) {
+        console.error(error);
+        alert("❌ Registration failed: " + error.message);
       }
-
-      const userData = { username, password, name, surname, role: "user" };
-
-      // Save to Firebase
-      await set(ref(db, `users/${username.replace(/\W/g, "_")}`), userData);
-
-      // Save to localStorage
-      let users = JSON.parse(localStorage.getItem("users")) || [];
-      users.push(userData);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      alert("✅ Registration successful. Please log in.");
-      window.location.href = "login.html";
     });
-  </script>
 
-  <!-- PWA Support -->
-  <script>
+    // PWA: Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log("✅ Service Worker registered"))
