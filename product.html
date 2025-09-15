@@ -3,24 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Product Details</title>
+  <title>Product Details - Mini Jumia</title>
   <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
-  </script>
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <meta name="theme-color" content="#0d6efd" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    .product-img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+    }
+    .product-img:hover {
+      transform: scale(1.05);
+    }
+    .btn-add-cart {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-add-cart:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    #productDetail, #recommendedProducts {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeSlideUp 0.5s forwards;
+    }
+    @keyframes fadeSlideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .carousel-inner img {
+      max-height: 400px;
+      object-fit: cover;
+    }
+    .recommended-card img {
+      height: 180px;
+      object-fit: cover;
+      border-radius: 6px;
+      transition: transform 0.3s ease;
+    }
+    .recommended-card img:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
 <body>
   <div class="container mt-4">
     <a href="index.html" class="btn btn-secondary mb-3">⬅ Back to Shop</a>
-    <div id="productDetail" class="card p-3 shadow-sm">
-      <!-- Product details will appear here -->
-    </div>
+    <div id="productDetail" class="card p-3 shadow-sm"></div>
+
+    <h4 class="mt-5">🔥 Recommended Products</h4>
+    <div id="recommendedProducts" class="row g-3 mt-2"></div>
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
@@ -38,12 +76,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    const productDetail = document.getElementById("productDetail");
+    const recommendedProducts = document.getElementById("recommendedProducts");
     const urlParams = new URLSearchParams(window.location.search);
     const productId = parseInt(urlParams.get("id"));
 
-    const productDetail = document.getElementById("productDetail");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-    // Fallback product list (optional)
     const defaultProducts = [
       { id: 1, name: "Wireless Earbuds", price: 7500, image: "https://via.placeholder.com/300x200?text=Earbuds", category: "Electronics" },
       { id: 2, name: "Smartphone", price: 45000, image: "https://via.placeholder.com/300x200?text=Phone", category: "Electronics" },
@@ -51,49 +90,100 @@
       { id: 4, name: "Bluetooth Speaker", price: 9500, image: "https://via.placeholder.com/300x200?text=Speaker", category: "Electronics" }
     ];
 
-    onValue(ref(db, "products"), (snapshot) => {
+    onValue(ref(db, "products"), snapshot => {
       const data = snapshot.val();
-      let products = [...defaultProducts];
-      if (data) {
-        products = products.concat(Object.values(data));
-      }
+      let products = defaultProducts;
+      if (data) products = products.concat(Object.values(data));
 
       const product = products.find(p => p.id === productId);
 
-      if (product) {
-        productDetail.innerHTML = `
-          <div class="row">
-            <div class="col-md-6">
-              <img src="${product.image}" class="img-fluid" alt="${product.name}">
+      if (!product) {
+        productDetail.innerHTML = "<h3 class='text-center text-danger'>Product not found!</h3>";
+        return;
+      }
+
+      // Product Images Carousel (can use the same image for now)
+      const images = product.images || [product.image];
+
+      let carouselIndicators = images.map((img, i) => 
+        `<button type="button" data-bs-target="#carouselProduct" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-current="true" aria-label="Slide ${i+1}"></button>`
+      ).join("");
+
+      let carouselInner = images.map((img, i) =>
+        `<div class="carousel-item ${i === 0 ? 'active' : ''}">
+          <img src="${img}" class="d-block w-100" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+        </div>`
+      ).join("");
+
+      productDetail.innerHTML = `
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div id="carouselProduct" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-indicators">${carouselIndicators}</div>
+              <div class="carousel-inner">${carouselInner}</div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#carouselProduct" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#carouselProduct" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+              </button>
             </div>
-            <div class="col-md-6">
+          </div>
+          <div class="col-md-6 d-flex flex-column justify-content-between">
+            <div>
               <h2>${product.name}</h2>
               <p><strong>Category:</strong> ${product.category || "Uncategorized"}</p>
               <p><strong>Price:</strong> ₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-success" onclick="addToCart(${product.id})">Add to Cart</button>
+              <p>${product.description || ""}</p>
+            </div>
+            <button class="btn btn-success btn-add-cart mt-3" onclick='addToCart(${product.id})'>
+              🛒 Add to Cart
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Recommended Products (excluding current)
+      const recommended = products.filter(p => p.id !== productId).slice(0, 4);
+      recommendedProducts.innerHTML = "";
+      recommended.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "col-md-3 recommended-card";
+        card.innerHTML = `
+          <div class="card h-100 shadow-sm">
+            <img src="${p.image}" class="card-img-top" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <div class="card-body d-flex flex-column">
+              <h6 class="card-title">${p.name}</h6>
+              <p class="mb-2">₦${p.price.toLocaleString()}</p>
+              <a href="product.html?id=${p.id}" class="btn btn-primary mt-auto btn-sm">View</a>
             </div>
           </div>
         `;
-      } else {
-        productDetail.innerHTML = "<h3>Product not found!</h3>";
-      }
+        recommendedProducts.appendChild(card);
+      });
     });
 
-    window.addToCart = function (id) {
+    window.addToCart = function(id) {
+      if (!user) {
+        alert("🔒 Please log in to add products to your cart.");
+        window.location.href = "login.html";
+        return;
+      }
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      onValue(ref(db, "products"), (snapshot) => {
+      onValue(ref(db, "products"), snapshot => {
         const products = snapshot.val();
         if (!products) return;
-
         const allProducts = Object.values(products);
         const product = allProducts.find(p => p.id === id);
         if (product) {
           cart.push(product);
           localStorage.setItem("cart", JSON.stringify(cart));
-          alert(`${product.name} added to cart!`);
+          alert(`✅ ${product.name} added to cart!`);
         }
       }, { onlyOnce: true });
     }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
