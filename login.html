@@ -63,7 +63,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, child, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
@@ -84,23 +84,32 @@
       const passwordInput = document.getElementById("password").value.trim();
 
       try {
-        // Fetch all users from Firebase
-        const snapshot = await get(ref(db, "users"));
-        if (!snapshot.exists()) throw new Error("No users found");
-
         let user = null;
-        snapshot.forEach(uSnap => {
-          const u = uSnap.val();
-          if ((u.username === usernameInput || u.email === usernameInput) && u.password === passwordInput) {
-            user = { ...u, uid: uSnap.key };
+
+        // 1️⃣ Hardcoded admin login
+        if (usernameInput === "admin" && passwordInput === "admin123") {
+          user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
+        } else {
+          // 2️⃣ Fetch all users from Firebase
+          const snapshot = await get(ref(db, "users"));
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            for (const key in users) {
+              const u = users[key];
+              if ((u.username === usernameInput || (u.email && u.email === usernameInput)) && u.password === passwordInput) {
+                user = { ...u, uid: key };
+                break;
+              }
+            }
           }
-        });
+        }
 
         if (!user) {
           alert("❌ Invalid username or password.");
           return;
         }
 
+        // Save logged-in user locally
         localStorage.setItem("loggedInUser", JSON.stringify(user));
 
         // Save session in Firebase
@@ -120,10 +129,10 @@
         }
 
       } catch (err) {
-        console.error("Login error:", err);
+        console.error(err);
         alert("❌ Something went wrong. Try again later.");
       }
     });
   </script>
 </body>
-  </html>
+</html>
