@@ -1,20 +1,43 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Dashboard - Mini Jumia</title>
+
+  <!-- PWA & Icons -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d6efd" />
   <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <meta name="theme-color" content="#0d6efd" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
   <style>
-    * { box-sizing: border-box; }
-    body { overflow-x: hidden; font-size: 14px; background-color: #f8f9fa; }
-    .card-body h5 { font-size: 1rem; }
-    table { table-layout: fixed; word-wrap: break-word; }
+    body {
+      background: #f1f3f6;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    }
+    .card h5 {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    table {
+      table-layout: fixed;
+      word-wrap: break-word;
+    }
+    .navbar a.btn {
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
     @media (max-width: 768px) {
       .table th, .table td { font-size: 13px; padding: 8px; }
     }
@@ -22,79 +45,89 @@
 </head>
 <body>
   <div id="userArea" class="text-end p-2 small"></div>
-  <nav class="navbar navbar-dark bg-dark">
-    <div class="container-fluid d-flex flex-wrap justify-content-between">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-dark mb-3">
+    <div class="container-fluid d-flex flex-wrap justify-content-between align-items-center">
       <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
-      <div class="d-flex gap-2">
-        <a href="upload.html" class="btn btn-sm btn-light">Upload Product</a>
-        <a href="edit-product.html" class="btn btn-sm btn-warning">Edit Products</a>
+      <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a href="upload.html" class="btn btn-light btn-sm">Upload Product</a>
+        <a href="edit-products.html" class="btn btn-warning btn-sm">Edit Products</a>
       </div>
     </div>
-  </nav>  <div class="container py-3">
-    <h5 class="text-center mb-4">📊 Admin Dashboard</h5>
-    <div class="row g-3">
-      <div class="col-6">
-        <div class="card text-bg-primary h-100">
-          <div class="card-body">
-            <h5>Total Orders</h5>
-            <p id="totalOrders" class="fs-5 mb-0">0</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="card text-bg-warning h-100">
-          <div class="card-body">
-            <h5>Pending</h5>
-            <p id="pendingOrders" class="fs-5 mb-0">0</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="card text-bg-success h-100">
-          <div class="card-body">
-            <h5>Shipped</h5>
-            <p id="shippedOrders" class="fs-5 mb-0">0</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="card text-bg-info h-100">
-          <div class="card-body">
-            <h5>Total Revenue (₦)</h5>
-            <p id="totalRevenue" class="fs-5 mb-0">0</p>
-          </div>
-        </div>
-      </div>
-    </div><div class="mt-4 d-flex justify-content-between align-items-center">
-  <h6 class="mb-0">📦 Orders</h6>
-  <select id="filterStatus" class="form-select form-select-sm w-auto">
-    <option value="All">All</option>
-    <option value="Pending">Pending</option>
-    <option value="Shipped">Shipped</option>
-    <option value="Delivered">Delivered</option>
-  </select>
-</div>
+  </nav>
 
-<div class="table-responsive mt-2">
-  <table class="table table-sm table-bordered">
-    <thead class="table-dark">
-      <tr>
-        <th>#</th>
-        <th>Customer</th>
-        <th>Items</th>
-        <th>Status</th>
-        <th>Change</th>
-      </tr>
-    </thead>
-    <tbody id="ordersTable"></tbody>
-  </table>
-</div>
+  <div class="container">
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card text-center text-bg-primary p-3">
+          <h5>Total Orders</h5>
+          <p id="totalOrders" class="fs-5 mb-0">0</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center text-bg-warning p-3">
+          <h5>Pending</h5>
+          <p id="pendingOrders" class="fs-5 mb-0">0</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center text-bg-success p-3">
+          <h5>Shipped</h5>
+          <p id="shippedOrders" class="fs-5 mb-0">0</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center text-bg-info p-3">
+          <h5>Total Revenue (₦)</h5>
+          <p id="totalRevenue" class="fs-5 mb-0">0</p>
+        </div>
+      </div>
+    </div>
 
-  </div>  <script type="module">
+    <!-- Orders Filter -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">📦 Orders</h6>
+      <select id="filterStatus" class="form-select form-select-sm w-auto">
+        <option value="All">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Delivered">Delivered</option>
+      </select>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM", authDomain: "mini-jumia-42773.firebaseapp.com", databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com", projectId: "mini-jumia-42773", storageBucket: "mini-jumia-42773.appspot.com", messagingSenderId: "641009946484", appId: "1:641009946484:web:23a692390add3827802621" };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -108,64 +141,70 @@
 
     const statusColor = { "Pending": "warning", "Shipped": "primary", "Delivered": "success" };
 
-    window.updateStatus = (id, newStatus) => {
-      update(ref(db, `orders/${id}`), { status: newStatus });
-      alert("✅ Status updated");
+    window.updateStatus = async (id, newStatus) => {
+      try {
+        await update(ref(db, `orders/${id}`), { status: newStatus });
+      } catch(err) {
+        console.error("Status update failed:", err);
+      }
     };
 
-    document.addEventListener("DOMContentLoaded", () => {
-      onValue(ref(db, "orders"), snapshot => {
-        const data = snapshot.val();
-        const renderTable = (statusFilter) => {
-          ordersTable.innerHTML = "";
-          let total = 0, pending = 0, shipped = 0, count = 0;
+    const renderOrders = (data, filter="All") => {
+      ordersTable.innerHTML = "";
+      let total = 0, pending = 0, shipped = 0, count = 0;
 
-          for (const id in data) {
-            const order = data[id];
-            if (statusFilter !== "All" && order.status !== statusFilter) continue;
-            total += order.total || 0;
-            if (order.status === "Pending") pending++;
-            if (order.status === "Shipped") shipped++;
-            count++;
+      for (const id in data) {
+        const order = data[id];
+        if (filter !== "All" && order.status !== filter) continue;
 
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>#${count}</td>
-              <td>
-                <strong>${order.name}</strong><br/>
-                <small>${order.phone}</small><br/>
-                <small>${order.email}</small><br/>
-                <small>${order.address}</small><br/>
-                <small class="text-muted">${new Date(parseInt(order.order_id?.replace("ORD", "")) || Date.now()).toLocaleString()}</small>
-              </td>
-              <td>
-                <ul class="mb-1 ps-3">
-                  ${(order.items || []).map(p => `<li>${p.name} - ₦${p.price.toLocaleString()}</li>`).join("")}
-                </ul>
-                <small class="fw-bold">₦${(order.total || 0).toLocaleString()}</small>
-              </td>
-              <td><span class="badge bg-${statusColor[order.status] || "secondary"}">${order.status}</span></td>
-              <td>
-                <select class="form-select form-select-sm" onchange="updateStatus('${id}', this.value)">
-                  <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-                  <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
-                  <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
-                </select>
-              </td>`;
-            ordersTable.appendChild(row);
-          }
+        total += order.total || 0;
+        if(order.status === "Pending") pending++;
+        if(order.status === "Shipped") shipped++;
+        count++;
 
-          totalOrders.textContent = Object.keys(data).length;
-          pendingOrders.textContent = pending;
-          shippedOrders.textContent = shipped;
-          totalRevenue.textContent = total.toLocaleString();
-        };
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>#${count}</td>
+          <td>
+            <strong>${order.name}</strong><br/>
+            <small>${order.phone}</small><br/>
+            <small>${order.email}</small><br/>
+            <small>${order.address}</small><br/>
+            <small class="text-muted">${new Date(parseInt(order.order_id.replace("ORD",""))).toLocaleString()}</small>
+          </td>
+          <td>
+            <ul class="mb-1 ps-3">
+              ${(order.items || []).map(item => `<li>${item.name} - ₦${item.price.toLocaleString()}</li>`).join("")}
+            </ul>
+            <small class="fw-bold">₦${(order.total || 0).toLocaleString()}</small>
+          </td>
+          <td><span class="badge bg-${statusColor[order.status] || "secondary"}">${order.status}</span></td>
+          <td>
+            <select class="form-select form-select-sm" onchange="updateStatus('${id}', this.value)">
+              <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+              <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
+            </select>
+          </td>
+        `;
+        ordersTable.appendChild(row);
+      }
 
-        filterStatus.addEventListener("change", () => renderTable(filterStatus.value));
-        renderTable("All");
-      });
+      totalOrders.textContent = Object.keys(data).length;
+      pendingOrders.textContent = pending;
+      shippedOrders.textContent = shipped;
+      totalRevenue.textContent = total.toLocaleString();
+    };
+
+    onValue(ref(db, "orders"), snapshot => {
+      const data = snapshot.val() || {};
+      renderOrders(data, filterStatus.value);
+      filterStatus.addEventListener("change", () => renderOrders(data, filterStatus.value));
     });
-  </script>  <script>
+  </script>
+
+  <!-- User auth check -->
+  <script>
     const userArea = document.getElementById("userArea");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user || user.role !== "admin") {
@@ -181,12 +220,16 @@
       localStorage.removeItem("loggedInUser");
       window.location.href = "login.html";
     }
-  </script>  <script>
+  </script>
+
+  <!-- PWA Service Worker -->
+  <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("service-worker.js")
         .then(reg => console.log("✅ Service Worker registered", reg.scope))
-        .catch(err => console.error("❌ Service Worker registration failed", err));
+        .catch(err => console.error("❌ SW registration failed", err));
     }
-  </script></body>
-</html>
+  </script>
+</body>
+        </html>
