@@ -5,9 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cart - Mini Jumia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .cart-card img {
+      width: 100px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .quantity-input {
+      width: 60px;
+      text-align: center;
+    }
+    .cart-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .cart-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    #totalContainer {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
   <div id="userArea" class="text-end p-2"></div>
+
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
       <a class="navbar-brand" href="index.html">← Back to Store</a>
@@ -17,20 +43,39 @@
   <div class="container mt-4">
     <h2>Your Cart 🛒</h2>
     <div id="cartItems" class="mt-3"></div>
-    <h4 class="mt-4">Total: ₦<span id="totalPrice">0</span></h4>
-    <a id="checkoutBtn" href="checkout.html" class="btn btn-success mt-3">Proceed to Checkout</a>
+    <div id="totalContainer">
+      Total: ₦<span id="totalPrice">0</span>
+    </div>
+    <button id="checkoutBtn" class="btn btn-success mt-3 w-100">Proceed to Checkout</button>
   </div>
 
-  <script>
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Please log in to access the cart.");
-      window.location.href = "login.html";
-    }
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
     const cartContainer = document.getElementById("cartItems");
     const totalPriceEl = document.getElementById("totalPrice");
     const checkoutBtn = document.getElementById("checkoutBtn");
+
+    if (!user) {
+      alert("🔒 Please log in to access the cart.");
+      window.location.href = "login.html";
+    }
 
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -38,46 +83,74 @@
       cartContainer.innerHTML = "";
       if (cart.length === 0) {
         cartContainer.innerHTML = "<p>Your cart is empty.</p>";
-        checkoutBtn.classList.add("d-none");
+        checkoutBtn.disabled = true;
         totalPriceEl.textContent = "0";
         return;
       }
 
       let total = 0;
       cart.forEach((item, index) => {
-        total += item.price;
-        const itemDiv = document.createElement("div");
-        itemDiv.className = "card mb-2";
-        itemDiv.innerHTML = `
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
+        total += item.price * (item.quantity || 1);
+
+        const card = document.createElement("div");
+        card.className = "card mb-3 cart-card p-2";
+        card.innerHTML = `
+          <div class="d-flex align-items-center">
+            <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100x80?text=No+Image'">
+            <div class="flex-grow-1 ms-3">
               <h5>${item.name}</h5>
               <p>₦${item.price.toLocaleString()}</p>
             </div>
-            <button class="btn btn-danger btn-sm" onclick="removeItem(${index})">Remove</button>
-          </div>`;
-        cartContainer.appendChild(itemDiv);
+            <div class="d-flex align-items-center">
+              <input type="number" min="1" value="${item.quantity || 1}" class="form-control quantity-input me-2" onchange="updateQuantity(${index}, this.value)">
+              <button class="btn btn-danger btn-sm" onclick="removeItem(${index})">Remove</button>
+            </div>
+          </div>
+        `;
+        cartContainer.appendChild(card);
       });
+
       totalPriceEl.textContent = total.toLocaleString();
-      checkoutBtn.classList.remove("d-none");
+      checkoutBtn.disabled = false;
     }
 
-    function removeItem(index) {
+    window.updateQuantity = (index, value) => {
+      cart[index].quantity = parseInt(value) || 1;
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+
+    window.removeItem = (index) => {
       cart.splice(index, 1);
       localStorage.setItem("cart", JSON.stringify(cart));
       renderCart();
     }
 
+    checkoutBtn.addEventListener("click", () => {
+      if (!user) {
+        alert("🔒 Please log in to proceed to checkout.");
+        window.location.href = "login.html";
+      } else if (cart.length === 0) {
+        alert("Your cart is empty!");
+      } else {
+        window.location.href = "checkout.html";
+      }
+    });
+
     renderCart();
   </script>
 
+  <!-- User Info -->
   <script>
     const userArea = document.getElementById("userArea");
     const logged = JSON.parse(localStorage.getItem("loggedInUser"));
-    userArea.innerHTML = `
-      👋 Welcome, <strong>${logged.username}</strong>
-      <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
-    `;
+    if (logged) {
+      userArea.innerHTML = `
+        👋 Welcome, <strong>${logged.username || logged.name}</strong>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
+      `;
+    }
+
     function logout() {
       localStorage.removeItem("loggedInUser");
       localStorage.removeItem("cart");
@@ -85,4 +158,4 @@
     }
   </script>
 </body>
-</html>
+      </html>
