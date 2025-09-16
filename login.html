@@ -49,12 +49,12 @@
     <h2>🔐 Login to Mini Jumia</h2>
     <form id="loginForm">
       <div class="mb-3">
-        <label class="form-label">Username or Email</label>
-        <input type="text" id="username" class="form-control" placeholder="Enter username or email" required />
+        <label class="form-label">Username</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter your username" required />
       </div>
       <div class="mb-3">
         <label class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="Enter password" required />
+        <input type="password" id="password" class="form-control" placeholder="Enter your password" required />
       </div>
       <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
@@ -63,9 +63,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, push, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -79,30 +78,25 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Sanitize Firebase keys
-    function sanitizeKey(str) {
-      return str.trim().replace(/\W/g, "_");
-    }
-
     document.getElementById("loginForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const input = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
+      const usernameInput = document.getElementById("username").value.trim();
+      const passwordInput = document.getElementById("password").value.trim();
 
       try {
         let user = null;
 
-        // ✅ Admin login
-        if (input === "admin" && password === "admin123") {
+        // Admin login
+        if (usernameInput === "admin" && passwordInput === "admin123") {
           user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
         } else {
-          // Force fetch all users from Firebase
-          const usersSnapshot = await get(ref(db, "users"));
-          if (usersSnapshot.exists()) {
-            const users = usersSnapshot.val();
+          // Fetch all users
+          const snapshot = await get(ref(db, "users"));
+          if (snapshot.exists()) {
+            const users = snapshot.val();
             for (const key in users) {
               const u = users[key];
-              if ((u.username === input || u.username.toLowerCase() === input.toLowerCase()) && u.password === password) {
+              if (u.username === usernameInput && u.password === passwordInput) {
                 user = { ...u, uid: key, role: u.role || "user" };
                 break;
               }
@@ -111,7 +105,7 @@
         }
 
         if (!user) {
-          alert("❌ Invalid username/email or password.");
+          alert("❌ Invalid username or password.");
           return;
         }
 
@@ -126,13 +120,9 @@
         });
 
         alert("✅ Login successful!");
-
         // Redirect based on role
-        if (user.role === "admin") {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "index.html";
-        }
+        if (user.role === "admin") window.location.href = "admin.html";
+        else window.location.href = "index.html";
 
       } catch (err) {
         console.error(err);
