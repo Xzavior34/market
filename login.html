@@ -65,7 +65,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-// Firebase config
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
   authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -88,21 +88,24 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   try {
     let user = null;
 
-    // Hardcoded admin login
+    // Admin login
     if (input === "admin" && passwordInput === "admin123") {
       user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
     } else {
-      // Fetch all users from Firebase
       const usersRef = ref(db, "users");
       const snapshot = await get(usersRef);
 
       if (snapshot.exists()) {
         const users = snapshot.val();
+
         for (const key in users) {
           const u = users[key];
-          if (!u.username || !u.password) continue;
-          // Check if input matches username OR email stored in username
-          if ((u.username === input || (u.email && u.email === input)) && u.password === passwordInput) {
+          // Skip incomplete entries
+          if (!u.password) continue;
+
+          // Match username OR email
+          const matchInput = (u.username && u.username === input) || (u.email && u.email === input);
+          if (matchInput && u.password === passwordInput) {
             user = { ...u, uid: key, role: u.role || "user" };
             break;
           }
@@ -118,7 +121,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     // Save logged-in user locally
     localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-    // Save session in Firebase
+    // Log session to Firebase
     await push(ref(db, "sessions"), {
       username: user.username,
       role: user.role || "user",
@@ -126,12 +129,11 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     });
 
     alert("✅ Login successful!");
-    if (user.role === "admin") window.location.href = "admin.html";
-    else window.location.href = "index.html";
+    window.location.href = user.role === "admin" ? "admin.html" : "index.html";
 
   } catch (err) {
     console.error("Login error:", err);
-    alert("❌ Something went wrong. Check console for details.");
+    alert("❌ Something went wrong. Try again later.");
   }
 });
 </script>
