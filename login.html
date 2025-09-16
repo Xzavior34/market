@@ -49,12 +49,12 @@
     <h2>🔐 Login to Mini Jumia</h2>
     <form id="loginForm">
       <div class="mb-3">
-        <label class="form-label">Email or Username</label>
-        <input type="text" id="userInput" class="form-control" required />
+        <label class="form-label">Username or Email</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter username or email" required />
       </div>
       <div class="mb-3">
         <label class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" required />
+        <input type="password" id="password" class="form-control" placeholder="Enter password" required />
       </div>
       <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
@@ -63,8 +63,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, push, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
       authDomain: "mini-jumia-42773.firebaseapp.com",
@@ -78,26 +79,30 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Sanitize Firebase keys
+    function sanitizeKey(str) {
+      return str.trim().replace(/\W/g, "_");
+    }
+
     document.getElementById("loginForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const input = document.getElementById("userInput").value.trim();
-      const passwordInput = document.getElementById("password").value.trim();
+      const input = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       try {
         let user = null;
 
-        // Admin login
-        if (input === "admin" && passwordInput === "admin123") {
+        // ✅ Admin login
+        if (input === "admin" && password === "admin123") {
           user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
         } else {
-          // Fetch users from Firebase
-          const snapshot = await get(ref(db, "users"));
-          if (snapshot.exists()) {
-            const users = snapshot.val();
+          // Force fetch all users from Firebase
+          const usersSnapshot = await get(ref(db, "users"));
+          if (usersSnapshot.exists()) {
+            const users = usersSnapshot.val();
             for (const key in users) {
               const u = users[key];
-              // Match either username or email
-              if ((u.username === input || u.email === input) && u.password === passwordInput) {
+              if ((u.username === input || u.username.toLowerCase() === input.toLowerCase()) && u.password === password) {
                 user = { ...u, uid: key, role: u.role || "user" };
                 break;
               }
@@ -110,12 +115,12 @@
           return;
         }
 
-        // Save user locally
+        // Save logged-in user locally
         localStorage.setItem("loggedInUser", JSON.stringify(user));
 
         // Save session in Firebase
         await push(ref(db, "sessions"), {
-          username: user.username || user.email,
+          username: user.username,
           role: user.role || "user",
           loginTime: new Date().toISOString()
         });
