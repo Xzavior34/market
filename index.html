@@ -1,264 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mini Jumia</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xzavior Market</title>
 
-  <!-- PWA & Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
-  <meta name="theme-color" content="#0d6efd" />
+<!-- PWA & Icons -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<meta name="theme-color" content="#0d1f44" />
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
-    body { background: #f5f6fa; font-family: 'Segoe UI', sans-serif; }
-    .carousel-inner img { height: 300px; object-fit: cover; border-radius: 12px; }
-    .category-banner { text-align: center; cursor: pointer; transition: transform 0.3s ease; border-radius: 12px; padding:10px; background:#fff; flex:0 0 auto; }
-    .category-banner:hover { transform: scale(1.05); box-shadow:0 5px 15px rgba(0,0,0,0.1); }
-    .product-card { opacity: 0; transform: translateY(20px); animation: fadeSlideUp 0.6s ease forwards; border-radius: 12px; transition: box-shadow 0.3s ease, transform 0.3s ease; }
-    .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-    .product-card img { height: 200px; object-fit: cover; border-radius: 12px 12px 0 0; transition: transform 0.3s ease; }
-    .product-card img:hover { transform: scale(1.05); }
-    .btn-animate { animation: popButton 0.2s ease; }
-    @keyframes popButton { 0% { transform: scale(1); } 50% { transform: scale(0.95); } 100% { transform: scale(1); } }
-    @keyframes fadeSlideUp { to { opacity: 1; transform: translateY(0); } }
-    .topNavActions { background: #ffffff; border-bottom: 1px solid #ddd; display: flex; justify-content: space-around; margin-bottom: 20px; }
-    .topNavActions a { flex: 1; text-align: center; padding: 10px 0; text-decoration: none; color: #333; font-size: 14px; transition: background 0.2s ease; }
-    .topNavActions a:hover { background: #f0f0f0; border-radius: 8px; }
-    #categoryBanners { display:flex; gap:15px; overflow-x:auto; margin-bottom:20px; padding-bottom:10px; }
-  </style>
+<style>
+  /* General body and smooth scroll */
+  html { scroll-behavior: smooth; }
+  body {
+    background: linear-gradient(135deg, #0d1f44, #0a1f44);
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+    margin: 0;
+  }
+
+  /* Navbar */
+  .navbar { background: transparent !important; }
+  .navbar-brand { font-weight: 700; font-size: 1.5rem; }
+
+  /* Top actions */
+  .topNavActions {
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-radius: 12px;
+    margin: 15px auto;
+    max-width: 600px;
+  }
+  .topNavActions a {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: 0.2s ease;
+  }
+  .topNavActions a:hover {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+  }
+
+  /* Carousel */
+  .carousel-inner img {
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+
+  /* Category banners */
+  #categoryBanners {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  .category-banner {
+    flex: 0 0 auto;
+    background: rgba(255,255,255,0.05);
+    padding: 12px 18px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  .category-banner:hover {
+    transform: scale(1.05);
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* Product cards */
+  .product-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeSlideUp 0.6s ease forwards;
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: rgba(255,255,255,0.05);
+  }
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  }
+  .product-card img {
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+    transition: transform 0.3s ease;
+  }
+  .product-card img:hover {
+    transform: scale(1.05);
+  }
+
+  @keyframes fadeSlideUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Search & filter */
+  .form-control, .form-select {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+  }
+  .form-control::placeholder { color: rgba(255,255,255,0.7); }
+  .form-select option { background: #0d1f44; color: #fff; }
+
+  /* Cart badge */
+  #cartCount {
+    font-size: 0.8rem;
+    vertical-align: top;
+  }
+
+  /* Spinner */
+  #spinner { color: #fff; margin-top: 50px; }
+
+</style>
 </head>
 <body>
-  <div id="userArea" class="text-end p-2 small"></div>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">🛍 Mini Jumia</a>
-    </div>
-  </nav>
+<!-- User Area -->
+<div id="userArea" class="text-end p-2 small"></div>
 
-  <!-- Top Actions -->
-  <div class="topNavActions">
-    <a href="index.html">🏠<br><small>Home</small></a>
-    <a href="cart.html">🛒<br><small>Cart <span id="cartCount" class="badge bg-danger">0</span></small></a>
-    <a href="history.html">📜<br><small>Orders</small></a>
-    <a href="#" id="loginBtn">👤<br><small id="loginText">Login</small></a>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">🛒 Xzavior Market</a>
   </div>
+</nav>
 
-  <!-- Featured Carousel -->
-  <div class="container mb-4">
-    <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner" id="carouselInner"></div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
+<!-- Top Actions -->
+<div class="topNavActions">
+  <a href="index.html">🏠<br><small>Home</small></a>
+  <a href="cart.html">🛒<br><small>Cart <span id="cartCount" class="badge bg-danger">0</span></small></a>
+  <a href="history.html">📜<br><small>Orders</small></a>
+  <a href="#" id="loginBtn">👤<br><small id="loginText">Login</small></a>
+</div>
+
+<!-- Featured Carousel -->
+<div class="container mb-4">
+  <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner" id="carouselInner"></div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+</div>
+
+<!-- Category Banners -->
+<div class="container mb-3" id="categoryBanners"></div>
+
+<!-- Search + Category Filter -->
+<div class="container mb-4">
+  <div class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <form class="d-flex" role="search" onsubmit="event.preventDefault(); filterProducts();">
+        <input class="form-control" type="search" id="searchInput" placeholder="Search products">
+      </form>
+    </div>
+    <div class="col-md-6">
+      <select id="categoryFilter" class="form-select" onchange="filterProducts()">
+        <option value="">All Categories</option>
+      </select>
     </div>
   </div>
+</div>
 
-  <!-- Category Banners -->
-  <div class="container mb-3" id="categoryBanners"></div>
-
-  <!-- Search + Category Filter -->
-  <div class="container mb-3">
-    <div class="row g-2 align-items-center">
-      <div class="col-md-6">
-        <form class="d-flex" role="search" onsubmit="event.preventDefault(); filterProducts();">
-          <input class="form-control" type="search" id="searchInput" placeholder="Search products">
-        </form>
-      </div>
-      <div class="col-md-6">
-        <select id="categoryFilter" class="form-select" onchange="filterProducts()">
-          <option value="">All Categories</option>
-        </select>
-      </div>
-    </div>
+<!-- Products -->
+<div class="container">
+  <div id="spinner" class="text-center">
+    <div class="spinner-border text-light" role="status"></div>
+    <p class="mt-2">Loading products...</p>
   </div>
+  <div class="row" id="productList"></div>
+</div>
 
-  <!-- Products -->
-  <div class="container">
-    <div id="spinner" class="text-center my-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2">Loading products...</p>
-    </div>
-    <div class="row" id="productList"></div>
-  </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+  authDomain: "mini-jumia-42773.firebaseapp.com",
+  databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+  projectId: "mini-jumia-42773",
+  storageBucket: "mini-jumia-42773.appspot.com",
+  messagingSenderId: "641009946484",
+  appId: "1:641009946484:web:23a692390add3827802621"
+};
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-      authDomain: "mini-jumia-42773.firebaseapp.com",
-      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-      projectId: "mini-jumia-42773",
-      storageBucket: "mini-jumia-42773.appspot.com",
-      messagingSenderId: "641009946484",
-      appId: "1:641009946484:web:23a692390add3827802621"
-    };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+const productList = document.getElementById("productList");
+const categoryFilter = document.getElementById("categoryFilter");
+const spinner = document.getElementById("spinner");
+const carouselInner = document.getElementById("carouselInner");
+const categoryBanners = document.getElementById("categoryBanners");
+let allProducts = [];
+let displayedProducts = 0;
+const batchSize = 8;
 
-    const productList = document.getElementById("productList");
-    const categoryFilter = document.getElementById("categoryFilter");
-    const spinner = document.getElementById("spinner");
-    const carouselInner = document.getElementById("carouselInner");
-    const categoryBanners = document.getElementById("categoryBanners");
-    let allProducts = [];
-    let displayedProducts = 0;
-    const batchSize = 8;
+// User info
+const user = JSON.parse(localStorage.getItem("loggedInUser"));
+const userArea = document.getElementById("userArea");
+const loginBtn = document.getElementById("loginBtn");
+if (user) {
+  userArea.innerHTML = `👋 Welcome, <strong>${user.name || user.username}</strong>
+    <button class="btn btn-sm btn-outline-light ms-2" onclick="logout()">Logout</button>`;
+  loginBtn.style.display = "none";
+}
+window.logout = () => { localStorage.removeItem("loggedInUser"); window.location.href="login.html"; };
 
-    // User info
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    const userArea = document.getElementById("userArea");
-    const loginBtn = document.getElementById("loginBtn");
-    if (user) {
-      userArea.innerHTML = `👋 Welcome, <strong>${user.name || user.username}</strong>
-        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>`;
-      loginBtn.style.display = "none";
-    }
+spinner.style.display = "block";
+onValue(ref(db, "products"), (snapshot) => {
+  spinner.style.display = "none";
+  const data = snapshot.val();
+  allProducts = data ? Object.values(data) : [];
+  populateCategories();
+  renderCarousel();
+  renderCategoryBanners();
+  productList.innerHTML = "";
+  renderProducts(allProducts.slice(0, batchSize));
+  displayedProducts = batchSize;
+  updateCartCount();
+});
 
-    window.logout = () => {
-      localStorage.removeItem("loggedInUser");
-      alert("You have been logged out.");
-      window.location.href = "login.html";
-    };
+function renderProducts(products) {
+  products.forEach((product, index) => {
+    const col = document.createElement("div");
+    col.className = "col-md-3 mb-4";
+    col.innerHTML = `
+      <div class="card product-card h-100" style="animation-delay:${index*0.1}s">
+        <img src="${product.image}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${product.name}</h5>
+          <p class="card-text text-success fw-bold">₦${product.price.toLocaleString()}</p>
+          <button class="btn btn-primary mt-auto w-100" onclick='addToCart(this, ${JSON.stringify(product).replace(/'/g,"&apos;")})'>
+            ${user ? "Add to Cart" : "Login to Order"}
+          </button>
+        </div>
+      </div>`;
+    productList.appendChild(col);
+  });
+}
 
-    spinner.style.display = "block";
+window.addToCart = function(btn, product) {
+  if (!user) {
+    alert("🔒 Please log in to place an order.");
+    window.location.href = "login.html";
+    return;
+  }
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.push(product);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCartCount();
+  btn.classList.add("btn-animate");
+  setTimeout(() => btn.classList.remove("btn-animate"), 200);
+  alert(`${product.name} added to cart!`);
+};
 
-    // Fetch products from Firebase
-    onValue(ref(db, "products"), (snapshot) => {
-      spinner.style.display = "none";
-      const data = snapshot.val();
-      allProducts = data ? Object.values(data) : [];
-      populateCategories();
-      renderCarousel();
-      renderCategoryBanners();
-      productList.innerHTML = "";
-      renderProducts(allProducts.slice(0, batchSize));
-      displayedProducts = batchSize;
-      updateCartCount();
-    });
+function updateCartCount() {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  document.getElementById("cartCount").textContent = cart.length;
+}
 
-    function renderProducts(products) {
-      products.forEach((product, index) => {
-        const col = document.createElement("div");
-        col.className = "col-md-3 mb-4";
-        col.innerHTML = `
-          <div class="card product-card h-100" style="animation-delay:${index * 0.1}s">
-            <img src="${product.image}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">${product.name}</h5>
-              <p class="card-text text-success fw-bold">₦${product.price.toLocaleString()}</p>
-              <button class="btn btn-primary mt-auto w-100" onclick='addToCart(this, ${JSON.stringify(product).replace(/'/g,"&apos;")})'>
-                ${user ? "Add to Cart" : "Login to Order"}
-              </button>
-            </div>
-          </div>`;
-        productList.appendChild(col);
-      });
-    }
+function populateCategories() {
+  const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
+  categoryFilter.innerHTML = `<option value="">All Categories</option>`;
+  categories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    categoryFilter.appendChild(option);
+  });
+}
 
-    window.addToCart = function(btn, product) {
-      if (!user) {
-        alert("🔒 Please log in to place an order.");
-        window.location.href = "login.html";
-        return;
-      }
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      updateCartCount();
-      btn.classList.add("btn-animate");
-      setTimeout(() => btn.classList.remove("btn-animate"), 200);
-      alert(`${product.name} added to cart!`);
-    };
+function renderCarousel() {
+  carouselInner.innerHTML = "";
+  const featured = allProducts.slice(0,5);
+  featured.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = `carousel-item ${i===0?'active':''}`;
+    div.innerHTML = `<img src="${p.image}" class="d-block w-100" alt="${p.name}">`;
+    carouselInner.appendChild(div);
+  });
+}
 
-    function updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-      document.getElementById("cartCount").textContent = cart.length;
-    }
+function renderCategoryBanners() {
+  categoryBanners.innerHTML = "";
+  const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  categories.forEach(cat => {
+    const div = document.createElement("div");
+    div.className = "category-banner";
+    div.textContent = cat;
+    div.onclick = () => { categoryFilter.value = cat; filterProducts(); };
+    categoryBanners.appendChild(div);
+  });
+}
 
-    function populateCategories() {
-      const categories = new Set(allProducts.map(p => p.category).filter(Boolean));
-      categoryFilter.innerHTML = `<option value="">All Categories</option>`;
-      categories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        categoryFilter.appendChild(option);
-      });
-    }
+window.filterProducts = function() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const category = categoryFilter.value;
+  const filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(search) && (!category || p.category === category)
+  );
+  productList.innerHTML = "";
+  displayedProducts = batchSize;
+  renderProducts(filtered.slice(0, batchSize));
+};
 
-    function renderCarousel() {
-      carouselInner.innerHTML = "";
-      const featured = allProducts.slice(0,5);
-      featured.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = `carousel-item ${i===0?'active':''}`;
-        div.innerHTML = `<img src="${p.image}" class="d-block w-100" alt="${p.name}">`;
-        carouselInner.appendChild(div);
-      });
-    }
+// Infinite scroll to load more products
+window.addEventListener("scroll", () => {
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const threshold = document.body.offsetHeight - 500;
+  if (scrollPosition >= threshold) {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const category = categoryFilter.value;
+    const filtered = allProducts.filter(p =>
+      p.name.toLowerCase().includes(search) && (!category || p.category === category)
+    );
+    const nextBatch = filtered.slice(displayedProducts, displayedProducts + batchSize);
+    renderProducts(nextBatch);
+    displayedProducts += batchSize;
+  }
+});
 
-    function renderCategoryBanners() {
-      categoryBanners.innerHTML = "";
-      const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
-      categories.forEach(cat => {
-        const div = document.createElement("div");
-        div.className = "category-banner";
-        div.textContent = cat;
-        div.onclick = () => { categoryFilter.value=cat; filterProducts(); };
-        categoryBanners.append
-        categoryBanners.appendChild(div);
-      });
-    }
+// Initial cart count
+updateCartCount();
+</script>
 
-    window.filterProducts = function() {
-      const search = document.getElementById("searchInput").value.toLowerCase();
-      const category = categoryFilter.value;
-      const filtered = allProducts.filter(p =>
-        p.name.toLowerCase().includes(search) && (!category || p.category === category)
-      );
-      productList.innerHTML = "";
-      displayedProducts = batchSize;
-      renderProducts(filtered.slice(0, batchSize));
-    };
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    window.addEventListener("scroll", () => {
-      const scrollPosition = window.innerHeight + window.scrollY;
-      const threshold = document.body.offsetHeight - 500;
-      if (scrollPosition >= threshold) {
-        const search = document.getElementById("searchInput").value.toLowerCase();
-        const category = categoryFilter.value;
-        const filtered = allProducts.filter(p =>
-          p.name.toLowerCase().includes(search) && (!category || p.category === category)
-        );
-        const nextBatch = filtered.slice(displayedProducts, displayedProducts + batchSize);
-        renderProducts(nextBatch);
-        displayedProducts += batchSize;
-      }
-    });
-  </script>
-
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- PWA Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(reg => console.log("✅ Service Worker registered:", reg.scope))
-        .catch(err => console.error("❌ SW registration failed:", err));
-    }
-  </script>
+<!-- PWA Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(reg => console.log("✅ Service Worker registered:", reg.scope))
+    .catch(err => console.error("❌ SW registration failed:", err));
+}
+</script>
 </body>
 </html>
