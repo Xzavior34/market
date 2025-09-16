@@ -1,134 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login - Mini Jumia</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d6efd" />
-  <link rel="icon" href="icon-192.png" type="image/png" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: linear-gradient(135deg, #0d6efd, #6610f2);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .login-card {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    }
-    .login-card h2 {
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    .btn-primary {
-      background: #6610f2;
-      border: none;
-    }
-    .btn-primary:hover {
-      background: #520dc2;
-    }
-    a {
-      color: #fff;
-      text-decoration: underline;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login - Mini Jumia</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d6efd" />
+<link rel="icon" href="icon-192.png" type="image/png" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .login-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .login-card h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  .btn-primary {
+    background: #6610f2;
+    border: none;
+  }
+  .btn-primary:hover {
+    background: #520dc2;
+  }
+  a {
+    color: #fff;
+    text-decoration: underline;
+  }
+</style>
 </head>
 <body>
-  <div class="login-card">
-    <h2>🔐 Login to Mini Jumia</h2>
-    <form id="loginForm">
-      <div class="mb-3">
-        <label class="form-label">Username</label>
-        <input type="text" id="username" class="form-control" placeholder="Enter your username" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="Enter your password" required />
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Login</button>
-    </form>
-    <p class="mt-3 text-center">Don't have an account? <a href="register.html">Sign up</a></p>
-  </div>
+<div class="login-card">
+  <h2>🔐 Login to Mini Jumia</h2>
+  <form id="loginForm">
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input type="text" id="username" class="form-control" placeholder="Enter username" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" id="password" class="form-control" placeholder="Enter password" required />
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+  </form>
+  <p class="mt-3 text-center">Don't have an account? <a href="register.html">Sign up</a></p>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-      authDomain: "mini-jumia-42773.firebaseapp.com",
-      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-      projectId: "mini-jumia-42773",
-      storageBucket: "mini-jumia-42773.appspot.com",
-      messagingSenderId: "641009946484",
-      appId: "1:641009946484:web:23a692390add3827802621"
-    };
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+  authDomain: "mini-jumia-42773.firebaseapp.com",
+  databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+  projectId: "mini-jumia-42773",
+  storageBucket: "mini-jumia-42773.appspot.com",
+  messagingSenderId: "641009946484",
+  appId: "1:641009946484:web:23a692390add3827802621"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    document.getElementById("loginForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const usernameInput = document.getElementById("username").value.trim();
-      const passwordInput = document.getElementById("password").value.trim();
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
-      try {
-        let user = null;
+  const usernameInput = document.getElementById("username").value.trim();
+  const passwordInput = document.getElementById("password").value.trim();
 
-        // Admin login
-        if (usernameInput === "admin" && passwordInput === "admin123") {
-          user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
-        } else {
-          // Fetch all users
-          const snapshot = await get(ref(db, "users"));
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            for (const key in users) {
-              const u = users[key];
-              if (u.username === usernameInput && u.password === passwordInput) {
-                user = { ...u, uid: key, role: u.role || "user" };
-                break;
-              }
-            }
+  try {
+    let user = null;
+
+    // Hardcoded admin login
+    if (usernameInput === "admin" && passwordInput === "admin123") {
+      user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
+    } else {
+      // Fetch all users from Firebase
+      const usersRef = ref(db, "users");
+      const snapshot = await get(usersRef);
+
+      if (snapshot.exists()) {
+        const users = snapshot.val();
+        for (const key in users) {
+          const u = users[key];
+          if (u.username === usernameInput && u.password === passwordInput) {
+            user = { ...u, uid: key, role: u.role || "user" };
+            break;
           }
         }
-
-        if (!user) {
-          alert("❌ Invalid username or password.");
-          return;
-        }
-
-        // Save logged-in user locally
-        localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-        // Save session in Firebase
-        await push(ref(db, "sessions"), {
-          username: user.username,
-          role: user.role || "user",
-          loginTime: new Date().toISOString()
-        });
-
-        alert("✅ Login successful!");
-        // Redirect based on role
-        if (user.role === "admin") window.location.href = "admin.html";
-        else window.location.href = "index.html";
-
-      } catch (err) {
-        console.error(err);
-        alert("❌ Something went wrong. Try again later.");
       }
+    }
+
+    if (!user) {
+      alert("❌ Invalid username or password.");
+      return;
+    }
+
+    // Save logged-in user locally
+    localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+    // Save session in Firebase
+    await push(ref(db, "sessions"), {
+      username: user.username,
+      role: user.role || "user",
+      loginTime: new Date().toISOString()
     });
-  </script>
+
+    alert("✅ Login successful!");
+    if (user.role === "admin") window.location.href = "admin.html";
+    else window.location.href = "index.html";
+
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("❌ Something went wrong. Check console for details.");
+  }
+});
+</script>
 </body>
 </html>
