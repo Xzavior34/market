@@ -49,8 +49,8 @@
   <h2>🔐 Login to Mini Jumia</h2>
   <form id="loginForm">
     <div class="mb-3">
-      <label class="form-label">Username</label>
-      <input type="text" id="username" class="form-control" placeholder="Enter username" required />
+      <label class="form-label">Username or Email</label>
+      <input type="text" id="username" class="form-control" placeholder="Enter username or email" required />
     </div>
     <div class="mb-3">
       <label class="form-label">Password</label>
@@ -82,14 +82,14 @@ const db = getDatabase(app);
 document.getElementById("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
 
-  const usernameInput = document.getElementById("username").value.trim();
+  const input = document.getElementById("username").value.trim();
   const passwordInput = document.getElementById("password").value.trim();
 
   try {
     let user = null;
 
     // Hardcoded admin login
-    if (usernameInput === "admin" && passwordInput === "admin123") {
+    if (input === "admin" && passwordInput === "admin123") {
       user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
     } else {
       // Fetch all users from Firebase
@@ -100,7 +100,9 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
         const users = snapshot.val();
         for (const key in users) {
           const u = users[key];
-          if (u.username === usernameInput && u.password === passwordInput) {
+          if (!u.username || !u.password) continue;
+          // Check if input matches username OR email stored in username
+          if ((u.username === input || (u.email && u.email === input)) && u.password === passwordInput) {
             user = { ...u, uid: key, role: u.role || "user" };
             break;
           }
@@ -109,7 +111,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     }
 
     if (!user) {
-      alert("❌ Invalid username or password.");
+      alert("❌ Invalid username/email or password.");
       return;
     }
 
