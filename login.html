@@ -49,8 +49,8 @@
   <h2>🔐 Login to Mini Jumia</h2>
   <form id="loginForm">
     <div class="mb-3">
-      <label class="form-label">Username or Email</label>
-      <input type="text" id="username" class="form-control" placeholder="Enter username or email" required />
+      <label class="form-label">Email</label>
+      <input type="email" id="email" class="form-control" placeholder="Enter email address" required />
     </div>
     <div class="mb-3">
       <label class="form-label">Password</label>
@@ -63,7 +63,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+import { getDatabase, ref, get, push, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+// 🚨 NEW: Import Firebase Authentication methods
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
 
 // Firebase configuration
 const firebaseConfig = {
@@ -78,62 +81,69 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+// 🚨 NEW: Initialize Auth
+const auth = getAuth(app); 
+
 
 document.getElementById("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
 
-  const input = document.getElementById("username").value.trim();
+  const emailInput = document.getElementById("email").value.trim(); // Changed from 'username' to 'email'
   const passwordInput = document.getElementById("password").value.trim();
 
   try {
-    let user = null;
+    let userData = null;
 
-    // Admin login
-    if (input === "admin" && passwordInput === "admin123") {
-      user = { username: "admin", name: "Administrator", role: "admin", uid: "admin" };
+    // 1. 🚨 NEW: Use Firebase Auth to sign the user in securely
+    const userCredential = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+    const user = userCredential.user;
+    
+    const uid = user.uid;
+
+    // 2. Fetch the user's profile data from Realtime DB (Allowed by Rule Set 2)
+    // Rule Set 2 allows reading /users/UID
+    const userSnapshot = await get(child(ref(db, 'users'), uid));
+
+    if (userSnapshot.exists()) {
+      const dbUser = userSnapshot.val();
+      
+      // Combine Firebase Auth UID with DB profile data
+      userData = { 
+        ...dbUser, 
+        uid: uid, 
+        email: user.email, 
+        role: dbUser.role || "user" 
+      };
     } else {
-      const usersRef = ref(db, "users");
-      const snapshot = await get(usersRef);
-
-      if (snapshot.exists()) {
-        const users = snapshot.val();
-
-        for (const key in users) {
-          const u = users[key];
-          // Skip incomplete entries
-          if (!u.password) continue;
-
-          // Match username OR email
-          const matchInput = (u.username && u.username === input) || (u.email && u.email === input);
-          if (matchInput && u.password === passwordInput) {
-            user = { ...u, uid: key, role: u.role || "user" };
-            break;
-          }
-        }
-      }
+      // Should not happen if registration is done correctly
+      console.warn("User authenticated but profile not found in DB.");
+      userData = { uid: uid, email: user.email, role: "user" };
     }
 
-    if (!user) {
-      alert("❌ Invalid username/email or password.");
-      return;
-    }
+    // 3. Save logged-in user locally
+    localStorage.setItem("loggedInUser", JSON.stringify(userData));
 
-    // Save logged-in user locally
-    localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-    // Log session to Firebase
+    // 4. Log session to Firebase (Allowed by Rule Set 2: ".write": "auth != null")
     await push(ref(db, "sessions"), {
-      username: user.username,
-      role: user.role || "user",
+      uid: userData.uid,
+      email: userData.email,
+      role: userData.role,
       loginTime: new Date().toISOString()
     });
 
     alert("✅ Login successful!");
-    window.location.href = user.role === "admin" ? "admin.html" : "index.html";
+    window.location.href = userData.role === "admin" ? "admin.html" : "index.html";
 
   } catch (err) {
+    let errorMessage = "❌ Something went wrong. Try again later.";
+    
+    // Handle specific Firebase Auth errors
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        errorMessage = "❌ Invalid email or password.";
+    }
+    
     console.error("Login error:", err);
-    alert("❌ Something went wrong. Try again later.");
+    alert(errorMessage);
   }
 });
 </script>
