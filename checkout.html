@@ -59,7 +59,7 @@
       <div class="mb-3">
         <label class="form-label">Name</label>
         <input type="text" id="name" class="form-control" required />
-              </div>
+      </div>
       <div class="mb-3">
         <label class="form-label">Phone</label>
         <input type="tel" id="phone" class="form-control" required />
@@ -136,7 +136,7 @@
           // Fallback: Use the provided email address for guest orders
           userID = email; 
       } else {
-          // Should prevent pushing an undefined value
+          // Last resort check, prevents pushing 'undefined'
           return alert("❌ Could not determine user ID for the order.");
       }
       // 🎯 END FIXED LOGIC
