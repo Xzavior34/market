@@ -71,7 +71,7 @@
       <div class="mb-3">
         <label class="form-label">Address</label>
         <textarea id="address" class="form-control" required></textarea>
-      </div>
+        </div>
       <button type="submit" class="btn btn-primary w-100">Place Order</button>
     </form>
   </div>
@@ -125,27 +125,27 @@
         return alert("❌ Please fill in all fields.");
       }
       
-      // 🎯 FIXED LOGIC: Safely determining user ID
+      // 🎯 CORRECTED LOGIC: Safely determining user ID
       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
       let userID;
 
       if (loggedInUser && loggedInUser.uid) {
-          // Use the Firebase UID if the user is logged in
+          // Use the Firebase UID if the user is logged in (best case)
           userID = loggedInUser.uid;
       } else if (email) {
           // Fallback: Use the provided email address for guest orders
           userID = email; 
       } else {
-          // Last resort check, prevents pushing 'undefined'
-          return alert("❌ Could not determine user ID for the order.");
+          // Stop the push if a valid ID cannot be determined
+          return alert("❌ Could not determine user ID for the order. Please ensure email is provided.");
       }
-      // 🎯 END FIXED LOGIC
+      // 🎯 END CORRECTED LOGIC
 
       const orderId = "ORD" + Date.now();
 
       const order = {
         order_id: orderId,
-        user_id: userID, // Now using the guaranteed non-undefined userID
+        user_id: userID, // Now uses the safe, non-undefined userID
         name,
         phone,
         email,
