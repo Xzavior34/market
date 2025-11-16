@@ -1,185 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Checkout - Mini Jumia</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout - Mini Jumia</title>
 
-  <!-- PWA & Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
-  <meta name="theme-color" content="#0d6efd" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <meta name="theme-color" content="#0d6efd" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
-    body {
-      background: linear-gradient(135deg, #0d6efd, #6610f2);
-      min-height: 100vh;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .checkout-card {
-      background: rgba(255,255,255,0.1);
-      padding: 2rem;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      max-width: 600px;
-      margin: 2rem auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    }
-    .btn-primary {
-      background: #6610f2;
-      border: none;
-    }
-    .btn-primary:hover {
-      background: #520dc2;
-    }
-    a { color: #fff; text-decoration: underline; }
-    .list-group-item { background: rgba(255,255,255,0.05); border: none; color: #fff; }
-  </style>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0d6efd, #6610f2);
+      min-height: 100vh;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .checkout-card {
+      background: rgba(255,255,255,0.1);
+      padding: 2rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      max-width: 600px;
+      margin: 2rem auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .btn-primary {
+      background: #6610f2;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #520dc2;
+    }
+    a { color: #fff; text-decoration: underline; }
+    .list-group-item { background: rgba(255,255,255,0.05); border: none; color: #fff; }
+  </style>
 </head>
 <body>
-  <div id="userArea" class="text-end p-2"></div>
+  <div id="userArea" class="text-end p-2"></div>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
-    </div>
-  </nav>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🛍 Mini Jumia</a>
+    </div>
+  </nav>
 
-  <div class="checkout-card">
-    <h2 class="mb-4">🧾 Checkout</h2>
-    <ul class="list-group mb-3" id="cartItems"></ul>
-    <p class="text-end"><strong>Total:</strong> ₦<span id="total">0</span></p>
+  <div class="checkout-card">
+    <h2 class="mb-4">🧾 Checkout</h2>
+    <ul class="list-group mb-3" id="cartItems"></ul>
+    <p class="text-end"><strong>Total:</strong> ₦<span id="total">0</span></p>
 
-    <form id="checkoutForm">
-      <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" id="name" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Phone</label>
-        <input type="tel" id="phone" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" id="email" class="form-control" required />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Address</label>
-        <textarea id="address" class="form-control" required></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Place Order</button>
-    </form>
-  </div>
+    <form id="checkoutForm">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" id="name" class="form-control" required />
+              </div>
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="tel" id="phone" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Address</label>
+        <textarea id="address" class="form-control" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Place Order</button>
+    </form>
+  </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
-      authDomain: "mini-jumia-42773.firebaseapp.com",
-      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
-      projectId: "mini-jumia-42773",
-      storageBucket: "mini-jumia-42773.appspot.com",
-      messagingSenderId: "641009946484",
-      appId: "1:641009946484:web:23a692390add3827802621"
-    };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOgQW8DzFIU9sJXD0j09kFpEzOpocfrpM",
+      authDomain: "mini-jumia-42773.firebaseapp.com",
+      databaseURL: "https://mini-jumia-42773-default-rtdb.firebaseio.com",
+      projectId: "mini-jumia-42773",
+      storageBucket: "mini-jumia-42773.appspot.com",
+      messagingSenderId: "641009946484",
+      appId: "1:641009946484:web:23a692390add3827802621"
+    };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    // Load cart items
-    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
-    const cartList = document.getElementById("cartItems");
-    const totalElement = document.getElementById("total");
-    let total = 0;
+    // Load cart items
+    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartList = document.getElementById("cartItems");
+    const totalElement = document.getElementById("total");
+    let total = 0;
 
-    if (cartItems.length === 0) {
-      cartList.innerHTML = "<li class='list-group-item'>Your cart is empty.</li>";
-    } else {
-      cartItems.forEach(item => {
-        const li = document.createElement("li");
-        li.className = "list-group-item";
-        li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
-        cartList.appendChild(li);
-        total += item.price;
-      });
-    }
-    totalElement.textContent = total.toLocaleString();
+    if (cartItems.length === 0) {
+      cartList.innerHTML = "<li class='list-group-item'>Your cart is empty.</li>";
+    } else {
+      cartItems.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        li.textContent = `${item.name} - ₦${item.price.toLocaleString()}`;
+        cartList.appendChild(li);
+        total += item.price;
+      });
+    }
+    totalElement.textContent = total.toLocaleString();
 
-    // Handle checkout
-    document.getElementById("checkoutForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
+    // Handle checkout
+    document.getElementById("checkoutForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
 
-      const name = document.getElementById("name").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const address = document.getElementById("address").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const address = document.getElementById("address").value.trim();
 
-      if (!name || !phone || !email || !address) {
-        return alert("❌ Please fill in all fields.");
-      }
+      if (!name || !phone || !email || !address) {
+        return alert("❌ Please fill in all fields.");
+      }
+      
+      // 🎯 FIXED LOGIC: Safely determining user ID
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      let userID;
 
-      const user = JSON.parse(localStorage.getItem("loggedInUser")) || { username: "guest" };
-      const orderId = "ORD" + Date.now();
+      if (loggedInUser && loggedInUser.uid) {
+          // Use the Firebase UID if the user is logged in
+          userID = loggedInUser.uid;
+      } else if (email) {
+          // Fallback: Use the provided email address for guest orders
+          userID = email; 
+      } else {
+          // Should prevent pushing an undefined value
+          return alert("❌ Could not determine user ID for the order.");
+      }
+      // 🎯 END FIXED LOGIC
 
-      const order = {
-        order_id: orderId,
-        user_id: user.username,
-        name,
-        phone,
-        email,
-        address,
-        items: cartItems,
-        total: total,
-        status: "Pending",
-        timestamp: new Date().toISOString()
-      };
+      const orderId = "ORD" + Date.now();
 
-      try {
-        await push(ref(db, "orders"), order);
-        localStorage.removeItem("cart");
-        alert("✅ Order placed successfully!");
-        window.location.href = "history.html";
-      } catch(err) {
-        console.error("❌ Order failed:", err);
-        alert("Something went wrong. Try again.");
-      }
-    });
-  </script>
+      const order = {
+        order_id: orderId,
+        user_id: userID, // Now using the guaranteed non-undefined userID
+        name,
+        phone,
+        email,
+        address,
+        items: cartItems,
+        total: total,
+        status: "Pending",
+        timestamp: new Date().toISOString()
+      };
 
-  <!-- User info & logout -->
-  <script>
-    const userArea = document.getElementById("userArea");
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (user) {
-      userArea.innerHTML = `
-        👋 Welcome, <strong>${user.username}</strong>
-        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
-      `;
-    }
+      try {
+        await push(ref(db, "orders"), order);
+        localStorage.removeItem("cart");
+        alert("✅ Order placed successfully!");
+        window.location.href = "history.html";
+      } catch(err) {
+        console.error("❌ Order failed:", err);
+        alert("Something went wrong. Try again.");
+      }
+    });
+  </script>
 
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "login.html";
-    }
-  </script>
+    <script>
+    const userArea = document.getElementById("userArea");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (user) {
+      userArea.innerHTML = `
+        👋 Welcome, <strong>${user.username}</strong>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="logout()">Logout</button>
+      `;
+    }
 
-  <!-- PWA Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(reg => console.log("✅ Service Worker registered:", reg.scope))
-        .catch(err => console.error("❌ SW registration failed:", err));
-    }
-  </script>
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    }
+  </script>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("✅ Service Worker registered:", reg.scope))
+        .catch(err => console.error("❌ SW registration failed:", err));
+    }
+  </script>
 </body>
-                                         </html>
+</html>
